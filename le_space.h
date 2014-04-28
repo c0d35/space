@@ -28,9 +28,9 @@ enum class AccessScheme: bool
 template< int _Dim, typename _Topo, typename _ElementT >
 struct TopologicalSpace {};
 template< int _Dim, typename _Topo, typename _ElementT >
-struct UniformSpace: public TopologicalSpace< _Dim, _Topo, _ElementT > {};
+struct UniformSpace: TopologicalSpace< _Dim, _Topo, _ElementT > {};
 template< int _Dim, typename _Topo, typename _Metric >
-struct MetricSpace: public UniformSpace < _Dim, _Topo, _Metric > {};
+struct MetricSpace: UniformSpace < _Dim, _Topo, _Metric > {};
 
 /**
  * kinda abstract simplex(?), one example for an element
@@ -43,7 +43,6 @@ template< int _Dim, LinkType _LType, AccessScheme _AScheme,  template< class U, 
 template< int _Dim,  template< class U, class V > class _Containment, template< class U > class _Allocator >
 struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::IndexAccessScheme, _Containment, _Allocator >
 {
-    public:
         enum {d = _Dim};
         ptrdiff_t upper, opponent, next;
         ptrdiff_t lower[_Dim + 1]; 
@@ -53,7 +52,6 @@ struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::IndexAccessScheme,
 template< template< class U, class V > class _Containment, template< class U > class _Allocator >
 struct AbstractSimplex< -1, LinkType::Single, AccessScheme::IndexAccessScheme, _Containment, _Allocator >
 {
-	public:
         enum { d = -1, };
 };
 
