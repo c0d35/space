@@ -29,6 +29,11 @@ class UniformSpace: public TopologicalSpace< _Dim, _Topo, _ElementT > {};
 template< int _Dim, class _Topo, class _Metric >
 class MetricSPace: public UniformSpace < _Dim, _Topo, _Metric > {};
 
+//kinda abstract simplex(?), one example for an element
+
+template< int _Dim,  template< class U, class V > class _Containment, template< class U > class _Allocator >
+class AbstractSimplex< _Dim, LinkType::Single, AccessScheme::IndexAccessScheme, _Containment, _Allocator >
+{};
 //
 
 #endif
