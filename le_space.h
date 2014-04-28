@@ -25,12 +25,12 @@ enum class AccessScheme: bool
 };
 
 
-template< int _Dim, typename _Topo, typename _ElementT >
+template< int _Dim, typename _Topo >
 struct TopologicalSpace {};
-template< int _Dim, typename _Topo, typename _ElementT >
-struct UniformSpace: TopologicalSpace< _Dim, _Topo, _ElementT > {};
-template< int _Dim, typename _Topo, typename _Metric >
-struct MetricSpace: UniformSpace < _Dim, _Topo, _Metric > {};
+template< int _Dim, typename _Topo  >
+struct UniformSpace: TopologicalSpace< _Dim, _Topo > {};
+template< int _Dim, typename _Metric >
+struct MetricSpace: UniformSpace < _Dim, _Metric > {};
 
 /**
  * kinda abstract simplex(?), one example for an element
@@ -41,7 +41,7 @@ template< int _Dim, LinkType _LType, AccessScheme _AScheme,  template< class U, 
 
 ///why Dim + 1 you may ask? 'cause \f$ {d+1 \choose d} = d + 1\f$ , u kno?
 template< int _Dim,  template< class U, class V > class _Containment, template< class U > class _Allocator >
-struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::Index, _Containment, _Allocator >
+struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::Index, _Containment, _Allocator >: TopologicalSpace< _Dim, AbstractSimplex< _Dim, LinkType::Single, AccessScheme::Index, _Containment, _Allocator > >
 {
         enum {d = _Dim};
         ptrdiff_t upper, opponent, next;
@@ -50,7 +50,7 @@ struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::Index, _Containmen
 
 ///terminate the recursion in the empty simplex (simplicial set) with dimension -1
 template< template< class U, class V > class _Containment, template< class U > class _Allocator >
-struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment, _Allocator >
+struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment, _Allocator >: TopologicalSpace< -1, AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment, _Allocator > >
 {
         enum { d = -1, };
 };
