@@ -1,3 +1,10 @@
+/**
+ *
+ * coder@computer.org
+ * coder@0xc0d3.org
+ *
+ */
+
 #ifndef LE_SPACE_H
 #define LE_SPACE_H
 
