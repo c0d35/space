@@ -9,6 +9,20 @@
 #ifndef LE_SPACE_H
 #define LE_SPACE_H
 
+enum class LinkType: bool
+{
+	Single,
+	Double,
+
+};
+
+enum class AccessScheme: bool
+{
+	PointerAccessScheme,
+	IndexAccessScheme,
+};
+
+
 template< int _Dim, class _Topo, class _ElementT >
 class TopologicalSpace {};
 template< int _Dim, class _Topo, class _ElementT >
