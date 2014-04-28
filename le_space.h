@@ -32,17 +32,23 @@ class UniformSpace: public TopologicalSpace< _Dim, _Topo, _ElementT > {};
 template< int _Dim, typename _Topo, typename _Metric >
 class MetricSpace: public UniformSpace < _Dim, _Topo, _Metric > {};
 
-//kinda abstract simplex(?), one example for an element
+/**
+ * kinda abstract simplex(?), one example for an element
+ */
 
 template< int _Dim, LinkType _LType, AccessScheme _AScheme,  template< class U, class V > class _Containment, template< class U > class _Allocator > struct AbstractSimplex {};
 
+
+///why Dim + 1 you may ask? 'cause \f$ {d+1 \choose d} = d + 1\f$ , u kno?
 template< int _Dim,  template< class U, class V > class _Containment, template< class U > class _Allocator >
 struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::IndexAccessScheme, _Containment, _Allocator >
 {
     public:
+        enum {d = _Dim};
         ptrdiff_t upper, opponent, next;
-        ptrdiff_t lower[_Dim + 1]; // why Dim + 1 you may ask? 'cause \binom{d+1}{d} = d + 1, u kno?
+        ptrdiff_t lower[_Dim + 1]; 
 };
+
 //
 
 #endif
