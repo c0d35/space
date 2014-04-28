@@ -13,7 +13,6 @@ enum class LinkType: bool
 {
 	Single,
 	Double,
-
 };
 
 enum class AccessScheme: bool
@@ -27,8 +26,8 @@ template< int _Dim, class _Topo, class _ElementT >
 class TopologicalSpace {};
 template< int _Dim, class _Topo, class _ElementT >
 class UniformSpace: public TopologicalSpace< _Dim, _Topo, _ElementT > {};
-template< int _Dim, class _Topo, class _Metric >: public UniformSpace < _Dim, _Topo, _Metric >
-class MetricSpace {};
+template< int _Dim, class _Topo, class _Metric >
+class MetricSPace: public UniformSpace < _Dim, _Topo, _Metric > {};
 
 //
 
