@@ -9,6 +9,9 @@
 #ifndef LE_SPACE_H
 #define LE_SPACE_H
 
+#include <cstddef>
+
+
 enum class LinkType: bool
 {
 	Single,
