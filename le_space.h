@@ -58,15 +58,15 @@ struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment,
         enum { d = -1, };
 };
 
-template< int _D, class _SD > struct ContainerFiller
+template< int _D, class _ASD > struct ContainerFiller
 { 
 	static inline void fill(_SD& s)
 	{
-		typedef AbstractSimplex< _D - 1, LinkType::Single, AccessScheme::Index, _SD::template _Containment, _SD::template _Allocator > AbstractSimplexT;
-		typedef typename _SD::_Trait::template SimplexT< _D, AbstractSimplexT > Simplex;
-		typedef typename _SD::template _Containment< Simplex, _SD::template _Allocator< Simplex > > Simplices;
+		typedef AbstractSimplex< _D - 1, LinkType::Single, AccessScheme::Index, _ASD::template _Containment, _ASD::template _Allocator > AbstractSimplexT;
+		typedef typename _ASD::_Trait::template SimplexT< _D, AbstractSimplexT > Simplex;
+		typedef typename _ASD::template _Containment< Simplex, _ASD::template _Allocator< Simplex > > Simplices;
 		s.simplex_containers[_D - 1] = new Simplices;
-		ContainerFiller< _D - 1, _SD >::fill(s);
+		ContainerFiller< _D - 1, _ASD >::fill(s);
 
 	};	
 
@@ -74,16 +74,16 @@ template< int _D, class _SD > struct ContainerFiller
 
 
 
-template< class _SD > struct ContainerFiller< 0, _SD >{ static inline void fill(_SD&){}};
+template< class _ASD > struct ContainerFiller< 0, _ASD >{ static inline void fill(_SD&){}};
 
 
-template< int _D, class _IT, class  _SD > struct IterFiller
+template< int _D, class _IT, class  _ASD > struct IterFiller
 {
 	static inline void fill(_IT& i)
 	{
-		typedef  AbstractSimplex< _D - 1, LinkType::Single, AccessScheme::Index, _SD::template _Containment, _SD::template _Allocator > AbstractSimplexT;
+		typedef  AbstractSimplex< _AD - 1, LinkType::Single, AccessScheme::Index, _ASD::template _Containment, _ASD::template _Allocator > AbstractSimplexT;
 		i.iterdata[_D] = new AbstractSimplexT;
-		IterFiller< _D - 1, _IT, _SD >::fill(i);
+		IterFiller< _D - 1, _IT, _ASD >::fill(i);
 	}
 };
 
