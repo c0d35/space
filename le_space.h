@@ -209,13 +209,14 @@ class AbstractSimplicialComplexTopologyTrait<  AbstractSimplicialComplex< _Dim, 
                     }
 
                     ptrdiff_t n[_D];
-					simd_cp< int, _D >::eval(n, iter.m_sh->simplex_containers[_D][iter.simplicesindices[_D - 1]].vertices);
-					
-					//... searching for odd permutation of vertices in the (_D ) (_D - 1) simplices
-					// it's enough to search for any permutation of the vertices, since two half simplices
-					// sharing the same vertices are the maximum - only two orientations (even and odd permutation)
-					// but the algebraic structure so the simple product addition is non-ambiguous
-					// (need a proof based on the eilenberg-zilber theorem and the kuenneth theorem)
+                    simd_cp< int, _D >::eval(n, iter.m_sh->simplex_containers[_D][iter.simplicesindices[_D - 1]].vertices);
+
+                    //... searching for odd permutation of vertices in the (_D ) (_D - 1) simplices
+                    // it's enough to search for any permutation of the vertices, since two half simplices
+                    // sharing the same vertices are the maximum - only two orientations (even and odd permutation)
+                    // but the algebraic structure so the simple product addition is non-ambiguous
+                    // (need a proof based on the eilenberg-zilber theorem and the kuenneth theorem)
+                    //
 
 
                     simplexAlign< _D, _It>::doit(iter);
