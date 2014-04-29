@@ -3,7 +3,7 @@
  * coder@computer.org
  * coder@0xc0d3.org
  *
- * kinda note-pad foo
+ * this is only a sketch for some foo i'm thinking about
  */
 
 #ifndef LE_SPACE_H
@@ -209,6 +209,14 @@ class AbstractSimplicialComplexTopologyTrait<  AbstractSimplicialComplex< _Dim, 
                     }
 
                     ptrdiff_t n[_D];
+					simd_cp< int, _D >::eval(n, iter.m_sh->simplex_containers[_D][iter.simplicesindices[_D - 1]].vertices);
+					
+					//... searching for odd permutation of vertices in the (_D ) (_D - 1) simplices
+					// it's enough to search for any permutation of the vertices, since two half simplices
+					// sharing the same vertices are the maximum - only two orientations (even and odd permutation)
+					// but the algebraic structure so the simple product addition is non-ambiguous
+					// (need a proof based on the eilenberg-zilber theorem and the kuenneth theorem)
+
 
                     simplexAlign< _D, _It>::doit(iter);
                     simplexFlip< _D - 2, _It >::doit(iter);
@@ -216,8 +224,6 @@ class AbstractSimplicialComplexTopologyTrait<  AbstractSimplicialComplex< _Dim, 
                     return succ;
                 }
             };
-
-
 
         template< int _D, class _It >
             struct simplexAlign
@@ -308,6 +314,6 @@ class AbstractSimplicialComplexTopologyTrait<  AbstractSimplicialComplex< _Dim, 
 
 };
 
-//todo AS <-> multivectors/multiscalar
+//todo AS <-> multivectors/pseudoscalar (wedge product & other clifford algebra stuff) half simplices -> SO(n)
 
 #endif
