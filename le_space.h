@@ -6,6 +6,9 @@
  * this is only a sketch for some foo i'm thinking about
  */
 
+//abstract simplex with topological space as default space
+//metrical traits for every space (quasi-, pseudo-, semi- metrics included ... divergences & stuff)
+
 #ifndef LE_SPACE_H
 #define LE_SPACE_H
 
@@ -59,28 +62,44 @@ enum class AccessScheme: bool
     Pointer,
     Index,
 };
-
-
-template< int _Dim, typename _Topo >
+template< int _Dim >
+struct Set {};
+template< int _Dim >
 struct TopologicalSpace {};
-template< int _Dim, typename _Topo  >
-struct UniformSpace: TopologicalSpace< _Dim, _Topo > {};
-template< int _Dim, typename _Metric >
-struct MetricSpace: UniformSpace < _Dim, _Metric > {};
+template< int _Dim >
+struct UniformSpace: TopologicalSpace< _Dim > {};
+template< int _Dim >
+struct MetricSpace: UniformSpace < _Dim > {};
 
 /**
  * kinda abstract simplex(?), one example for an element
  */
-template< int _Dim, typename _Trait, LinkType _LType, AccessScheme _AScheme, template< class U , class V > class Containment , template< class U > class Allocator> class AbstractSimplicialComplex{};
+template< int _Dim, typename _Trait, LinkType _LType, AccessScheme _AScheme, template< class U , class V > class Containment , template< class U > class Allocator, class _Space > class AbstractSimplicialComplex{};
 template< typename _ASD > struct AbstractSimplicialComplexTopologyTrait{};
 template< typename _Iterator > struct AbstractSimplicialComplexIteratorFunctionTrait{};
 template< typename _ASD > struct AbstractSimplicialComplexIterator{};
-template< int _Dim, LinkType _LType, AccessScheme _AScheme,  template< class U, class V > class _Containment, template< class U > class _Allocator > struct AbstractSimplex {};
+template< int _Dim, LinkType _LType, AccessScheme _AScheme,  template< class U, class V > class _Containment, template< class U > class _Allocator, class _Space > struct AbstractSimplex: _Space {};
+
+///why d + 1 you may ask. 'cause \f$ {d+1 \choose d} = d+1\f$ , u kno'. thus we're terminating the recursion at dimension = -1
+template< int _Dim,  template< class U, class V > class _Containment, template< class U > class _Allocator, template < int D > class _Space >
+struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::Index, _Containment, _Allocator, _Space< _Dim > >: _Space < _Dim >
+{
+    enum {d = _Dim};
+    ptrdiff_t upper, opponent, next;
+    ptrdiff_t lower[_Dim + 1]; 
+};
+
+///terminate the recursion in the empty simplex (simplicial set) with dimension -1
+template< template< class U, class V > class _Containment, template< class U > class _Allocator, template < int D > class _Space >
+struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment, _Allocator, _Space< -1 > >: _Space< -1 >
+{
+    enum { d = -1, };
+};
 
 
 ///why d + 1 you may ask. 'cause \f$ {d+1 \choose d} = d+1\f$ , u kno'. thus we're terminating the recursion at dimension = -1
 template< int _Dim,  template< class U, class V > class _Containment, template< class U > class _Allocator >
-struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::Index, _Containment, _Allocator >: TopologicalSpace< _Dim, AbstractSimplex< _Dim, LinkType::Single, AccessScheme::Index, _Containment, _Allocator > >
+struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::Index, _Containment, _Allocator, Set< _Dim > >: Set < _Dim >
 {
     enum {d = _Dim};
     ptrdiff_t upper, opponent, next;
@@ -89,42 +108,58 @@ struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::Index, _Containmen
 
 ///terminate the recursion in the empty simplex (simplicial set) with dimension -1
 template< template< class U, class V > class _Containment, template< class U > class _Allocator >
-struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment, _Allocator >: TopologicalSpace< -1, AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment, _Allocator > >
+struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment, _Allocator, Set< -1 > >: Set< -1 >
 {
     enum { d = -1, };
 };
+/*
+template< int _Dim,  template< class U, class V > class _Containment, template< class U > class _Allocator >
+struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::Index, _Containment, _Allocator, TopologicalSpace< _Dim > >: TopologicalSpace < _Dim >
+{
+    enum {d = _Dim};
+    ptrdiff_t upper, opponent, next;
+    ptrdiff_t lower[_Dim + 1]; 
+};
 
-template< int _D, class _ASD > struct ContainerFiller
+///terminate the recursion in the empty simplex (simplicial set) with dimension -1
+template< template< class U, class V > class _Containment, template< class U > class _Allocator >
+struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment, _Allocator, TopologicalSpace< -1 > >: TopologicalSpace< -1 >
+{
+    enum { d = -1, };
+};
+*/
+
+template< int _D, class _SC > struct ContainerFiller
 { 
-    static inline void fill(_ASD& s)
+    static inline void fill(_SC& s)
     {
-        typedef AbstractSimplex< _D - 1, LinkType::Single, AccessScheme::Index, _ASD::template _Containment, _ASD::template _Allocator > AbstractSimplexT;
-        typedef typename _ASD::_Trait::template SimplexT< _D, AbstractSimplexT > Simplex;
-        typedef typename _ASD::template _Containment< Simplex, _ASD::template _Allocator< Simplex > > Simplices;
+        typedef AbstractSimplex< _D - 1, LinkType::Single, AccessScheme::Index, _SC::template _Containment, _SC::template _Allocator, typename _SC::template Space< _D - 1 > > AbstractSimplexT;
+        typedef typename _SC::_Trait::template SimplexT< _D, AbstractSimplexT > Simplex;
+        typedef typename _SC::template _Containment< Simplex, _SC::template _Allocator< Simplex > > Simplices;
         s.simplex_containers[_D - 1] = new Simplices;
-        ContainerFiller< _D - 1, _ASD >::fill(s);
+        ContainerFiller< _D - 1, _SC >::fill(s);
 
     };	
 
 };
 
-template< class _ASD > struct ContainerFiller< 0, _ASD >{ static inline void fill(_ASD&){}};
+template< class _SC > struct ContainerFiller< 0, _SC >{ static inline void fill(_SC&){}};
 
-template< int _D, class _IT, class  _ASD > struct IterFiller
+template< int _D, class _IT, class  _SC > struct IterFiller
 {
     static inline void fill(_IT& i)
     {
-        typedef  AbstractSimplex< _D - 1, LinkType::Single, AccessScheme::Index, _ASD::template _Containment, _ASD::template _Allocator > AbstractSimplexT;
+        typedef  AbstractSimplex< _D - 1, LinkType::Single, AccessScheme::Index, _SC::template _Containment, _SC::template _Allocator, typename _SC::template Space < _D - 1 > > AbstractSimplexT;
         i.iterdata[_D] = new AbstractSimplexT;
-        IterFiller< _D - 1, _IT, _ASD >::fill(i);
+        IterFiller< _D - 1, _IT, _SC >::fill(i);
     }
 };
 
-template< class _IT, class _ASD > struct IterFiller< 0, _IT, _ASD >{ static inline void fill(_IT&){}};
+template< class _IT, class _SC > struct IterFiller< 0, _IT, _SC >{ static inline void fill(_IT&){}};
 
 template< int _Dim, class _Trait,
-    template< class U , class V > class _Containment , template< class U > class _Allocator> 
-    class AbstractSimplicialComplex< _Dim, _Trait, LinkType::Single, AccessScheme::Index, _Containment, _Allocator >
+    template< class U , class V > class _Containment , template< class U > class _Allocator, class _Space> 
+    class AbstractSimplicialComplex< _Dim, _Trait, LinkType::Single, AccessScheme::Index, _Containment, _Allocator, _Space >
 {
     public:
         enum { d = _Dim,};
@@ -140,17 +175,17 @@ template< int _Dim, class _Trait,
         }
         void* simplex_containers[_Dim];
 };
-template< int _Dim, class _Trait, LinkType _LType, AccessScheme _AScheme, template< class U , class V > class _Containment , template< class U > class _Allocator> 
-class AbstractSimplicialComplexIterator< AbstractSimplicialComplex< _Dim, _Trait, _LType, _AScheme, _Containment, _Allocator > >
+template< int _Dim, class _Trait, LinkType _LType, AccessScheme _AScheme, template< class U , class V > class _Containment , template< class U > class _Allocator, class _Space> 
+class AbstractSimplicialComplexIterator< AbstractSimplicialComplex< _Dim, _Trait, _LType, _AScheme, _Containment, _Allocator, _Space > >
 {
     public:
-        typedef AbstractSimplicialComplex< _Dim, _Trait, _LType, _AScheme, _Containment, _Allocator > ASDT;
-        typedef AbstractSimplicialComplexTopologyTrait< ASDT > ASDTopoT;
+        typedef AbstractSimplicialComplex< _Dim, _Trait, _LType, _AScheme, _Containment, _Allocator, _Space > ASCT;
+        typedef AbstractSimplicialComplexTopologyTrait< ASCT > ASCTopoT;
         typedef AbstractSimplicialComplexIteratorFunctionTrait< AbstractSimplicialComplexIterator > IterFuncT;
 
         AbstractSimplicialComplexIterator()
         {
-            IterFiller< _Dim, AbstractSimplicialComplexIterator, ASDT >::fill(this);
+            IterFiller< _Dim, AbstractSimplicialComplexIterator, ASCT >::fill(this);
         }
 
         ~AbstractSimplicialComplexIterator()
@@ -165,7 +200,7 @@ class AbstractSimplicialComplexIterator< AbstractSimplicialComplex< _Dim, _Trait
         template < int _D >
             inline AbstractSimplicialComplexIterator& simplexCCW()
             {
-                ASDTopoT::template simplexCCV<_D, AbstractSimplicialComplexIterator >::doit(this);	
+                ASCTopoT::template simplexCCV<_D, AbstractSimplicialComplexIterator >::doit(this);	
                 return *this;
             }
 
@@ -176,16 +211,16 @@ class AbstractSimplicialComplexIterator< AbstractSimplicialComplex< _Dim, _Trait
 
         void*	    iterdata[_Dim];
         ptrdiff_t	simplicesindices[_Dim];
-        ASDT	*m_sd;
+        ASCT	*m_sd;
 };
 
-template< int _Dim, class _Trait, template< class U , class V > class _Containment , template< class U > class _Allocator> 
-class AbstractSimplicialComplexTopologyTrait<  AbstractSimplicialComplex< _Dim, _Trait, LinkType::Single, AccessScheme::Index, _Containment, _Allocator > >
+template< int _Dim, class _Trait, template< class U , class V > class _Containment , template< class U > class _Allocator, class _Space> 
+class AbstractSimplicialComplexTopologyTrait<  AbstractSimplicialComplex< _Dim, _Trait, LinkType::Single, AccessScheme::Index, _Containment, _Allocator, _Space > >
 {
     public:
 
-        typedef AbstractSimplicialComplex< _Dim, _Trait, LinkType::Single, AccessScheme::Index, _Containment, _Allocator > ASDT;
-        typedef AbstractSimplicialComplexIterator< ASDT > IterT;
+        typedef AbstractSimplicialComplex< _Dim, _Trait, LinkType::Single, AccessScheme::Index, _Containment, _Allocator, _Space > ASCT;
+        typedef AbstractSimplicialComplexIterator< ASCT > IterT;
         //use const_expr for operations
         template< int _D, class _It >
             struct simplexFlip
@@ -217,7 +252,6 @@ class AbstractSimplicialComplexTopologyTrait<  AbstractSimplicialComplex< _Dim, 
                     // but the algebraic structure so the simple product addition is non-ambiguous
                     // (need a proof based on the eilenberg-zilber theorem and the kuenneth theorem)
                     //
-
 
                     simplexAlign< _D, _It>::doit(iter);
                     simplexFlip< _D - 2, _It >::doit(iter);
@@ -315,6 +349,21 @@ class AbstractSimplicialComplexTopologyTrait<  AbstractSimplicialComplex< _Dim, 
 
 };
 
+//template< template< class U, class V > class _Containment, template< class U > class _Allocator >
+
+//test concretisations
+#include <vector>
+
+typedef AbstractSimplex< 0, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 0 > > Simplex0;
+typedef AbstractSimplex< 1, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 1 > > Simplex1;
+typedef AbstractSimplex< 2, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 2 > > Simplex2;
+typedef AbstractSimplex< 3, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 3 > > Simplex3;
+typedef AbstractSimplex< 4, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 4 > > Simplex4;
+typedef AbstractSimplex< 5, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 5 > > Simplex5;
+typedef AbstractSimplex< 6, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 6 > > Simplex6;
+
+
 //todo AS <-> multivectors/pseudoscalar (wedge product & other clifford algebra stuff) half simplices -> SO(n)
+//wedge product, wedge sum ... bouquet of circles
 
 #endif
