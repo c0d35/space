@@ -380,16 +380,9 @@ class AbstractSimplicialComplexTopologyTrait<  AbstractSimplicialComplex< _Dim, 
 
 //template< template< class U, class V > class _Containment, template< class U > class _Allocator >
 
-//test concretisations
 #include <vector>
 
-typedef AbstractSimplex< 0, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 0 > > Simplex0;
-typedef AbstractSimplex< 1, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 1 > > Simplex1;
-typedef AbstractSimplex< 2, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 2 > > Simplex2;
-typedef AbstractSimplex< 3, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 3 > > Simplex3;
-typedef AbstractSimplex< 4, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 4 > > Simplex4;
-typedef AbstractSimplex< 5, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 5 > > Simplex5;
-typedef AbstractSimplex< 6, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 6 > > Simplex6;
+template< int D > using Simplex = AbstractSimplex< D, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< D > >;
 
 
 //simple implementation of a point
