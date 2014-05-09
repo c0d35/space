@@ -13,6 +13,31 @@
 #define LE_SPACE_H
 
 #include <cstddef>
+//some helpers, rewrite them with constexpr
+
+template< bool _cond, class _then, class _else >
+struct IF
+{
+	typedef _then RET;
+};
+
+template< class _then, class _else >
+struct IF< false, _then, _else >
+{
+	typedef _else RET;
+};
+
+template< int N, int M >
+struct ipow
+{
+	enum { eval = N * ipow< N , M - 1 >::eval};
+};
+
+template < int N >
+struct ipow< N, 0 >
+{
+	enum { eval = 1 };
+};
 
 template< typename _T, int _I >
 struct simd_sum
@@ -334,7 +359,7 @@ class AbstractSimplicialComplexTopologyTrait<  AbstractSimplicialComplex< _Dim, 
                 {
                     return false;
                 }
-
+k
             };
 
         template <class _It>
@@ -361,6 +386,11 @@ typedef AbstractSimplex< 3, LinkType::Single, AccessScheme::Index, std::vector, 
 typedef AbstractSimplex< 4, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 4 > > Simplex4;
 typedef AbstractSimplex< 5, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 5 > > Simplex5;
 typedef AbstractSimplex< 6, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< 6 > > Simplex6;
+
+
+//simple implementation of a point
+//
+
 
 
 //todo AS <-> multivectors/pseudoscalar (wedge product & other clifford algebra stuff) half simplices -> SO(n)
