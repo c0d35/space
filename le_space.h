@@ -87,6 +87,11 @@ enum class AccessScheme: bool
     Pointer,
     Index,
 };
+//
+//some structures
+
+template< int N > struct Algebra {};
+template< int M, int N > struct GradedAlgebra {};
 template< int _Dim >
 struct Set {};
 template< int _Dim >
@@ -359,7 +364,6 @@ class AbstractSimplicialComplexTopologyTrait<  AbstractSimplicialComplex< _Dim, 
                 {
                     return false;
                 }
-k
             };
 
         template <class _It>
@@ -389,7 +393,7 @@ typedef AbstractSimplex< 6, LinkType::Single, AccessScheme::Index, std::vector, 
 
 
 //simple implementation of a point
-//
+//kinda n-vector stuff
 
 
 
