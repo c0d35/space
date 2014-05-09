@@ -98,7 +98,7 @@ template< int _Dim >
 struct TopologicalSpace {};
 template< int _Dim >
 struct UniformSpace: TopologicalSpace< _Dim > {};
-template< int _Dim >
+template< int _Dim, template< int _D, typename _Type, template < int __D, typename __Type, typename ..._Args > class _P > class _M  >
 struct MetricSpace: UniformSpace < _Dim > {};
 
 /**
@@ -399,7 +399,7 @@ template< int D, typename _Type, typename ... _Args >
 class SimplePoint
 {
 	public:
-		enum { dimension = D };
+		enum { d = D };
 		typedef _Type Type;
 		_Type values[D];
 		inline _Type& operator [](ptrdiff_t n) { return values[n];}
@@ -429,7 +429,33 @@ class SimplePoint
         }
 };
 
+template < int D, template < int D, typename Type, typename ..._Args > class _E, template< int _D, typename _Type, template < int __D, typename __Type, typename ..._Args > class _P > class _M > struct LinearSpace: public MetricSpace< D, _M >
+{
+    enum{d = D};
+    template< typename T > using Vector = _E< D, T >;
+};
 
+template< int D, typename _Type, template < int _D, typename __Type, typename ... _Args > class _Point >
+struct EuklidianMetric
+{
+    enum{ d = D, };
+    typedef _Type ValueType;
+    typedef _Point< d, ValueType > Point;
+    typedef Point Vector;
+    static inline Vector dist(Point p0, Point p1)
+    {
+        Vector d;
+        for(ptrdiff_t i = 0; i < D; i++)d[i] = p1[i] - p0[i];
+        return d;
+    }
+
+};
+
+template< int D, typename Type > using SimpleEuklidianMetric = EuklidianMetric< D, Type, SimplePoint >;
+
+template< int D, template < int _D, typename __Type, typename ... _Args > class P>
+using EuklidianSpace = LinearSpace<D, P, EuklidianMetric>;
+template< int D > using SimpleEuklidianSpace = EuklidianSpace< D, SimplePoint >;
 
 
 
