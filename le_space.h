@@ -393,7 +393,43 @@ typedef AbstractSimplex< 6, LinkType::Single, AccessScheme::Index, std::vector, 
 
 
 //simple implementation of a point
-//kinda n-vector stuff
+//kinda n-vector stuff if used in a vector-space
+
+template< int D, typename _Type, typename ... _Args >
+class SimplePoint
+{
+	public:
+		enum { dimension = D };
+		typedef _Type Type;
+		_Type values[D];
+		inline _Type& operator [](ptrdiff_t n) { return values[n];}
+		SimplePoint()
+		{
+            for(ptrdiff_t i = 0; i < D; i++) values[i] = 0;
+		}
+        SimplePoint( std::initializer_list< Type > val)
+        {
+            ptrdiff_t i = 0;
+            for(auto v : val) values[i++] = v;
+        }
+		SimplePoint(const SimplePoint& p)
+		{
+			for(ptrdiff_t i = 0; i < D; i++)
+			{
+				values[i] = p.values[i];
+			}
+		}
+        inline SimplePoint& operator = (const SimplePoint& p)
+        {
+			for(ptrdiff_t i = 0; i < D; i++)
+			{
+				values[i] = p.values[i];
+			}
+            return *this;
+        }
+};
+
+
 
 
 
