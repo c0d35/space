@@ -398,13 +398,13 @@ class SimplePoint
 		inline _Type& operator [](ptrdiff_t n) { return values[n];}
 		SimplePoint()
 		{
-            for(ptrdiff_t i = 0; i < D; i++) values[i] = 0;
+			for(ptrdiff_t i = 0; i < D; i++) values[i] = 0;
 		}
-        SimplePoint( std::initializer_list< Type > val)
-        {
-            ptrdiff_t i = 0;
-            for(auto v : val) values[i++] = v;
-        }
+		SimplePoint( std::initializer_list< Type > val)
+		{
+			ptrdiff_t i = 0;
+			for(auto v : val) values[i++] = v;
+		}
 		SimplePoint(const SimplePoint& p)
 		{
 			for(ptrdiff_t i = 0; i < D; i++)
@@ -412,14 +412,14 @@ class SimplePoint
 				values[i] = p.values[i];
 			}
 		}
-        inline SimplePoint& operator = (const SimplePoint& p)
-        {
+		inline SimplePoint& operator = (const SimplePoint& p)
+		{
 			for(ptrdiff_t i = 0; i < D; i++)
 			{
 				values[i] = p.values[i];
 			}
-            return *this;
-        }
+			return *this;
+		}
 };
 
 template < int D, template < int D, typename Type, typename ..._Args > class _E, template< int _D, typename _Type, template < int __D, typename __Type, typename ..._Args > class _P > class _M > struct LinearSpace: public MetricSpace< D, _M >
@@ -451,7 +451,7 @@ using EuklidianSpace = LinearSpace<D, P, EuklidianMetric>;
 template< int D > using SimpleEuklidianSpace = EuklidianSpace< D, SimplePoint >;
 
 
-
+// vector <-> polynome / functional / function
 //todo AS <-> multivectors/pseudoscalar (wedge product & other clifford algebra stuff) half simplices -> SO(n)
 //wedge product, wedge sum ... bouquet of circles
 
