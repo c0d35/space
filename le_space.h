@@ -76,6 +76,13 @@ struct simd_cp< _T, 0 >
 };
 
 
+enum class ArchType: short
+{
+    GENERIC,
+    AMD64,
+    AARCH64,
+};
+
 enum class LinkType: bool
 {
     Single,
@@ -389,11 +396,12 @@ template< int D > using Simplex = AbstractSimplex< D, LinkType::Single, AccessSc
 //kinda n-vector stuff if used in a vector-space
 
 template< int D, typename _Type, typename ... _Args >
-class SimplePoint
+struct SimplePoint
 {
 	public:
 		enum { d = D };
 		typedef _Type Type;
+        typedef Type ValueType;
 		_Type values[D];
 		inline _Type& operator [](ptrdiff_t n) { return values[n];}
 		SimplePoint()
@@ -424,8 +432,57 @@ class SimplePoint
 
 template < int D, template < int D, typename Type, typename ..._Args > class _E, template< int _D, typename _Type, template < int __D, typename __Type, typename ..._Args > class _P > class _M > struct LinearSpace: public MetricSpace< D, _M >
 {
-    enum{d = D};
-    template< typename T > using Vector = _E< D, T >;
+    enum{ d = D };
+
+    //template< typename T > using Vector = _E< D, T >;
+   // template< typename T > using ValueType = typename Vector< T >::ValueType;
+    template< typename T > using Metric = _M< d, T, _E >;
+
+    template< typename T > struct Vertex: public Simplex< 0 > //derive from simplex, cause every linear space is hausdorffsch (kolomoorov T_2), so i hope
+                                                              //that's okay
+    {
+        enum { d = D };
+        typedef typename Metric< T >::Vector::ValueType ValueType;
+        ValueType values[D];
+        inline ValueType& operator [](ptrdiff_t n) { return values[n];}
+        Vertex()
+        {
+            for(ptrdiff_t i = 0; i < D; i++) values[i] = 0;
+        }
+        Vertex( std::initializer_list< ValueType > val)
+        {
+            ptrdiff_t i = 0;
+            for(auto v : val) values[i++] = v;
+        }
+        Vertex(const Vertex& p)
+        {
+            for(ptrdiff_t i = 0; i < D; i++)
+            {
+                values[i] = p.values[i];
+            }
+        }
+        inline Vertex& operator = (const Vertex& p)
+        {
+            for(ptrdiff_t i = 0; i < D; i++)
+            {
+                values[i] = p.values[i];
+            }
+            return *this;
+        }
+    };
+
+    template< typename T > using Vector = Vertex< T >; //i guess, every vector is a 0-cell, so ...
+
+
+    //using Benix = Metric< float >;
+
+    //template< typename T > inline Vector< T > Vector<T>::operator + ( const Vector< T > &v0, const Vector< T > &v1)  {return Metric< T >::add(v0, v1); }
+   // template< typename T > using Metric< d, T, _E>::foo();
+    //template< Metric::template operator + (const Vector);
+    //inline Vector operator + (const Vector &v) const { return ;}
+    //using Metric = _M< D, _E, _P< _E > >;
+    //template< typename T > using Metric = _M< d, T, Vector>;
+
 };
 
 template< int D, typename _Type, template < int _D, typename __Type, typename ... _Args > class _Point >
@@ -435,6 +492,7 @@ struct EuklidianMetric
     typedef _Type ValueType;
     typedef _Point< d, ValueType > Point;
     typedef Point Vector;
+    static inline void foo() { return;};
     static inline Vector dist(Point p0, Point p1)
     {
         Vector d;
@@ -443,6 +501,9 @@ struct EuklidianMetric
     }
 
 };
+
+template < ArchType a, int D, typename Type > struct EuklidianMetricTrait { };
+
 
 template< int D, typename Type > using SimpleEuklidianMetric = EuklidianMetric< D, Type, SimplePoint >;
 
