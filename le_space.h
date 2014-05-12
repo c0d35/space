@@ -506,5 +506,6 @@ template< int D > using SimpleEuklidianSpace = EuklidianSpace< D, SimplePoint >;
 // vector <-> polynome / functional / function
 //todo AS <-> multivectors/pseudoscalar (wedge product & other clifford algebra stuff) half simplices -> SO(n)
 //wedge product, wedge sum ... bouquet of circles
+//V = \bigoplus_{n \in \mathbb{N}} V_n <- make graded vector spaces
 
 #endif
