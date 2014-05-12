@@ -474,15 +474,6 @@ template < int D, template < int D, typename Type, typename ..._Args > class _E,
     template< typename T > using Vector = Vertex< T >; //i guess, every vector is a 0-cell, so ...
 
 
-    //using Benix = Metric< float >;
-
-    //template< typename T > inline Vector< T > Vector<T>::operator + ( const Vector< T > &v0, const Vector< T > &v1)  {return Metric< T >::add(v0, v1); }
-   // template< typename T > using Metric< d, T, _E>::foo();
-    //template< Metric::template operator + (const Vector);
-    //inline Vector operator + (const Vector &v) const { return ;}
-    //using Metric = _M< D, _E, _P< _E > >;
-    //template< typename T > using Metric = _M< d, T, Vector>;
-
 };
 
 template< int D, typename _Type, template < int _D, typename __Type, typename ... _Args > class _Point >
