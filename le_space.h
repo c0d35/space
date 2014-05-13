@@ -27,6 +27,10 @@ struct IF< false, _then, _else >
 	typedef _else RET;
 };
 
+template< int N > struct ifact{ enum { eval = N * ifact< N - 1>::eval }; };
+template <> struct ifact< 0 > { enum { eval = 1 }; };
+template< int N, int K > struct ibinom{ enum { eval = ifact< N >::eval / ( ifact< K >::eval *  ifact< N - K >::eval)};};
+
 template< int N, int M >
 struct ipow
 {
@@ -38,6 +42,7 @@ struct ipow< N, 0 >
 {
 	enum { eval = 1 };
 };
+
 
 template< typename _T, int _I >
 struct simd_sum
@@ -98,11 +103,12 @@ enum class AccessScheme: bool
 //some structures
 
 template< int N > struct Algebra {};
-template< int M, int N > struct GradedAlgebra {};
+template< int N > struct GradedAlgebra {};
+template< int K, int N > struct QuotientSpace {};
 template< int _Dim >
 struct Set {};
 template< int _Dim >
-struct TopologicalSpace {};
+struct TopologicalSpace: Set< _Dim > {};
 template< int _Dim >
 struct UniformSpace: TopologicalSpace< _Dim > {};
 template< int _Dim, template< int _D, typename _Type, template < int __D, typename __Type, typename ..._Args > class _P > class _M  >
@@ -438,10 +444,13 @@ template < int D, template < int D, typename Type, typename ..._Args > class _E,
    // template< typename T > using ValueType = typename Vector< T >::ValueType;
     template< typename T > using Metric = _M< d, T, _E >;
 
-    template< typename T > struct Vertex: public Simplex< 0 > //derive from simplex, cause every linear space is hausdorffsch (kolomoorov T_2), so i hope
+    //typedef  typename Metric::template ValueType ValueType;
+
+    template< typename T > struct Vertex: public Simplex< 1 > //derive from simplex, cause every linear space is hausdorffian (kolomogorov T_2), so i hope
                                                               //that's okay
     {
         enum { d = D };
+
         typedef typename Metric< T >::Vector::ValueType ValueType;
         ValueType values[D];
         inline ValueType& operator [](ptrdiff_t n) { return values[n];}
@@ -469,9 +478,14 @@ template < int D, template < int D, typename Type, typename ..._Args > class _E,
             }
             return *this;
         }
+        constexpr int getdimension()
+        {
+            return d;
+        }
     };
 
-    template< typename T > using Vector = Vertex< T >; //i guess, every vector is a 0-cell, so ...
+    template< typename T > using Vector = Vertex< T >; //i guess, every vector is a 1-cell, so ...
+    //template< typename T > Vector< T > e[D]; //basis
 
 
 };
@@ -503,9 +517,27 @@ using EuklidianSpace = LinearSpace<D, P, EuklidianMetric>;
 template< int D > using SimpleEuklidianSpace = EuklidianSpace< D, SimplePoint >;
 
 
+template< int K, int D, template < int D, template < int D, typename Type, typename ..._Args > class _E, template< int _D, typename _Type, template < int __D, typename __Type, typename ..._Args > class _P > class _M > class S > struct ExteriorPower: QuotientSpace< K, D >
+{
+   enum{ d = ibinom< D, K >::eval };
+   struct Vector: Simplex< K >
+    {
+    };
+
+   inline typename ExteriorPower< D - K, D, S>::Vector operator * (const Vector &v) { return  ExteriorPower< D - K, D, S>::Vector; } //Hodge-*
+   
+};
+
+template< int D, template < int D, template < int D, typename Type, typename ..._Args > class _E, template< int _D, typename _Type, template < int __D, typename __Type, typename ..._Args > class _P > class _M > class S > struct ExteriorAlgebra: GradedAlgebra< D >
+{
+    enum{ d = ipow< 2, D >::eval };
+};
+
 // vector <-> polynome / functional / function
 //todo AS <-> multivectors/pseudoscalar (wedge product & other clifford algebra stuff) half simplices -> SO(n)
 //wedge product, wedge sum ... bouquet of circles
 //V = \bigoplus_{n \in \mathbb{N}} V_n <- make graded vector spaces
-
+//projective spaces -> quotient spaces of topological spaces(?) -> finite fields -> elliptic curves
+//Grassmannian(k, V) is a algebraic subvariety of projective space P(Λ^kV) -> Pluecker embedding
+//exterior algebra -> simplicial complex
 #endif
