@@ -436,57 +436,55 @@ struct SimplePoint
 		}
 };
 
-template < int D, template < int D, typename Type, typename ..._Args > class _E, template< int _D, typename _Type, template < int __D, typename __Type, typename ..._Args > class _P > class _M > struct LinearSpace: public MetricSpace< D, _M >
+template < int D, class _E, template< int _D, typename _Type, template < int __D, typename __Type, typename ..._Args > class _P > class _M > struct LinearSpace: public MetricSpace< D, _M >
 {
     enum{ d = D };
 
     //template< typename T > using Vector = _E< D, T >;
    // template< typename T > using ValueType = typename Vector< T >::ValueType;
-    template< typename T > using Metric = _M< d, T, _E >;
+    //using Metric = _M< d, T, _E >;
 
     //typedef  typename Metric::template ValueType ValueType;
 
-    template< typename T > struct Vertex: public Simplex< 1 > //derive from simplex, cause every linear space is hausdorffian (kolomogorov T_2), so i hope
-                                                              //that's okay
-    {
-        enum { d = D };
+    typedef _E ValueType;
 
-        typedef typename Metric< T >::Vector::ValueType ValueType;
-        ValueType values[D];
-        inline ValueType& operator [](ptrdiff_t n) { return values[n];}
+    struct Scalar: Simplex< 0 >
+    {
+        enum { k = 0, d = D };
+
+    };
+    struct Vertex: Simplex< 1 >//derive from simplex, cause every linear space is hausdorffian (kolomogorov T_2), so i hope that's okay
+    {
+        enum { k = 1, d = D};
+        ValueType v[D];
+        inline ValueType& operator [](ptrdiff_t n) { return v[n];}
         Vertex()
         {
-            for(ptrdiff_t i = 0; i < D; i++) values[i] = 0;
+            for(ptrdiff_t i = 0; i < D; i++) v[i] = 0;
         }
         Vertex( std::initializer_list< ValueType > val)
         {
             ptrdiff_t i = 0;
-            for(auto v : val) values[i++] = v;
+            for(auto v : val) v[i++] = v;
         }
         Vertex(const Vertex& p)
         {
             for(ptrdiff_t i = 0; i < D; i++)
             {
-                values[i] = p.values[i];
+                v[i] = p.v[i];
             }
         }
         inline Vertex& operator = (const Vertex& p)
         {
             for(ptrdiff_t i = 0; i < D; i++)
             {
-                values[i] = p.values[i];
+                v[i] = p.v[i];
             }
             return *this;
         }
-        constexpr int getdimension()
-        {
-            return d;
-        }
     };
 
-    template< typename T > using Vector = Vertex< T >; //i guess, every vector is a 1-cell, so ...
-    //template< typename T > Vector< T > e[D]; //basis
-
+    typedef Vertex Vector; //i guess, every vector is a 1-cell, so ...
 
 };
 
@@ -512,9 +510,9 @@ template < ArchType a, int D, typename Type > struct EuklidianMetricTrait { };
 
 template< int D, typename Type > using SimpleEuklidianMetric = EuklidianMetric< D, Type, SimplePoint >;
 
-template< int D, template < int _D, typename __Type, typename ... _Args > class P>
-using EuklidianSpace = LinearSpace<D, P, EuklidianMetric>;
-template< int D > using SimpleEuklidianSpace = EuklidianSpace< D, SimplePoint >;
+template< int D, typename E>
+using EuklidianSpace = LinearSpace<D, E, EuklidianMetric>;
+template< int D > using SimpleEuklidianSpace = EuklidianSpace< D, double >;
 
 
 template< int K, int D, template < int D, template < int D, typename Type, typename ..._Args > class _E, template< int _D, typename _Type, template < int __D, typename __Type, typename ..._Args > class _P > class _M > class S > struct ExteriorPower: QuotientSpace< K, D >
