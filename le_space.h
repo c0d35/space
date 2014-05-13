@@ -30,6 +30,8 @@ struct IF< false, _then, _else >
 template< int N > struct ifact{ enum { eval = N * ifact< N - 1>::eval }; };
 template <> struct ifact< 0 > { enum { eval = 1 }; };
 template< int N, int K > struct ibinom{ enum { eval = ifact< N >::eval / ( ifact< K >::eval *  ifact< N - K >::eval)};};
+template< int N, int K > struct nchoosek{ enum { eval = ifact< N >::eval / ( ifact< K >::eval *  ifact< N - K >::eval)};};
+
 
 template< int N, int M >
 struct ipow
@@ -487,6 +489,8 @@ template < int D, class _E, template< int _D, typename _Type, template < int __D
 
     typedef Vertex Vector; //i guess, every vector is a 1-cell, so ...
 
+    Vector e[D]; //basis
+
 };
 
 template< int D, typename _Type, template < int _D, typename __Type, typename ... _Args > class _Point >
@@ -523,7 +527,10 @@ template< int K, int D, template < int D, template < int D, typename Type, typen
     {
     };
 
-   inline typename ExteriorPower< D - K, D, S>::Vector operator * (const Vector &v) { return  ExteriorPower< D - K, D, S>::Vector; } //Hodge-*
+   inline Vector operator ^ (const Vector& v) { return new Vector; } //wedge
+   inline typename ExteriorPower< D - K, D, S>::Vector operator * () { return  ExteriorPower< D - K, D, S>::Vector; } //Hodge-* \f$ \star : \bigwedge^{k} V \to \bigwedge^{n-k} V \f$
+
+   Vector e[d];//base
    
 };
 
