@@ -448,6 +448,7 @@ template < int D, class _E, template< int _D, typename _Type, template < int __D
 
     typedef _E ValueType;
 
+    //should i pull the Tensor Definitions from the exterior algebra?
     struct Scalar: Simplex< 0 >
     {
         enum { k = 0, d = D };
