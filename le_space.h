@@ -297,7 +297,8 @@ AbstractSimplicialComplex< _Dim, _Trait, _LType,
         ASCT	*m_sd;
 };
 
-template< int _Dim, class _Trait, template< class U , class V > class _Containment,
+template< int _Dim, class _Trait,
+    template< class U , class V > class _Containment,
     template< class U > class _Allocator, class _Space> 
 class AbstractSimplicialComplexTopologyTrait<  
 AbstractSimplicialComplex< _Dim, _Trait, LinkType::Single,
@@ -572,12 +573,15 @@ template < ArchType a, int D, typename Type > struct EuklidianMetricTrait { };
 
 
 template< int D > using SimplePointFdouble = SimplePoint< D, double >;
-template< int D > using SimpleEuklidianMetricFdouble = EuklidianMetric< D, double, SimplePointFdouble >;
+template< int D > using SimpleEuklidianMetricFdouble = EuklidianMetric< D,
+    double,
+    SimplePointFdouble >;
 
 //template< int D >
 //using EuklidianSpace = LinearSpace<D, EuklidianMetric>;
 template< int D >
-using SimpleEuklidianSpaceFdouble = LinearSpace< D, SimpleEuklidianMetricFdouble >;
+using SimpleEuklidianSpaceFdouble = LinearSpace< D,
+      SimpleEuklidianMetricFdouble >;
 
 
 template< int K, int D, class S > struct ExteriorPower: QuotientSpace< K, D >
@@ -593,7 +597,10 @@ template< int K, int D, class S > struct ExteriorPower: QuotientSpace< K, D >
     {
         typename Metric::template ElementT< d > v;
         Vector(){};
-        inline typename Metric::ValueType operator [](ptrdiff_t n) { return v[n];}
+        inline typename Metric::ValueType operator [](ptrdiff_t n)
+        {
+            return v[n];
+        }
     };
     struct Null: Vector
     {
