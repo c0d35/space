@@ -592,6 +592,8 @@ struct LinearSpace: public MetricSpace< D, _M >
 
 };
 
+//metrics and norms
+//
 template< int D, typename _Type, template < int _D > class _Point >
 struct EuklidianMetric
 {
