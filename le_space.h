@@ -185,7 +185,8 @@ template< int _Dim,  template< class U, class V > class _Containment,
 
 ///terminate the recursion in the empty simplex (simplicial set) with dimension -1
 template< template< class U, class V > class _Containment, template< class U > class _Allocator >
-struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment, _Allocator, Set< -1 > >: Set< -1 >
+struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment,
+    _Allocator, Set< -1 > >: Set< -1 >
 {
     enum { d = -1, };
 };
@@ -293,7 +294,8 @@ AbstractSimplicialComplex< _Dim, _Trait, _LType,
         ASCT	*m_sd;
 };
 
-template< int _Dim, class _Trait, template< class U , class V > class _Containment , template< class U > class _Allocator, class _Space> 
+template< int _Dim, class _Trait, template< class U , class V > class _Containment,
+    template< class U > class _Allocator, class _Space> 
 class AbstractSimplicialComplexTopologyTrait<  
 AbstractSimplicialComplex< _Dim, _Trait, LinkType::Single,
     AccessScheme::Index, _Containment, _Allocator, _Space > >
