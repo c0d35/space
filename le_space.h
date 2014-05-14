@@ -93,6 +93,47 @@ struct simd_cp< _T, 0 >
 	}
 };
 
+//quick hack integer chooser stuff
+//
+template< int S > struct SimpleLargerInteger{
+	unsigned long long values[S/64];
+};
+
+template< int S > struct IntegerChooser
+{
+	typedef typename IF< S <= sizeof(unsigned char), unsigned char,
+		IF< S <= sizeof(unsigned short), unsigned short,
+		IF< S <= sizeof(unsigned int), unsigned int,
+		IF< S <= sizeof(unsigned long long), unsigned long long,
+        SimpleLargerInteger< S > > > > >::RET IntegerType;
+};
+
+template< > struct IntegerChooser< 3 >
+{
+    enum { size = 3 };
+    typedef unsigned int IntegerType;
+};
+
+template< > struct IntegerChooser< 4 >
+{
+	enum { size = 4};
+	typedef unsigned int IntegerType;
+};
+
+
+template< > struct IntegerChooser< 6 >
+{
+	enum { size = 6};
+	typedef __attribute__ ((aligned (1))) unsigned long long IntegerType;
+};
+
+template< > struct IntegerChooser< 8 >
+{
+	enum { size = 8};
+	typedef __attribute__ ((aligned (32))) unsigned long long IntegerType;
+};
+
+
 
 enum class ArchType: short
 {
