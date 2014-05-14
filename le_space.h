@@ -184,7 +184,8 @@ template< int _Dim,  template< class U, class V > class _Containment,
 };
 
 ///terminate the recursion in the empty simplex (simplicial set) with dimension -1
-template< template< class U, class V > class _Containment, template< class U > class _Allocator >
+template< template< class U, class V > class _Containment,
+    template< class U > class _Allocator >
 struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment,
     _Allocator, Set< -1 > >: Set< -1 >
 {
@@ -224,7 +225,9 @@ template< int _D, class _IT, class  _SC > struct IterFiller
     }
 };
 
-template< class _IT, class _SC > struct IterFiller< 0, _IT, _SC >{ static inline void fill(_IT&){}};
+template< class _IT, class _SC > struct IterFiller< 0, _IT, _SC >{
+    static inline void fill(_IT&){}
+};
 
 template< int _Dim, class _Trait,
     template< class U , class V > class _Containment,
