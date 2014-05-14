@@ -610,13 +610,28 @@ struct EuklidianMetric
 
 };
 
+template< int D, typename _Type, template < int _D > class _E >
+struct ManhattanMetric
+{
+};
+
+template< int D, typename _Type, template < int _D > class _E >
+struct HammingMetric
+{
+};
+
+
 template < ArchType a, int D, typename Type > struct EuklidianMetricTrait { };
 
 
 template< int D > using SimplePointFdouble = SimplePoint< D, double >;
+template< int D > using SimplePointFint64 = SimplePoint< D, int64_t >;
 template< int D > using SimpleEuklidianMetricFdouble = EuklidianMetric< D,
     double,
     SimplePointFdouble >;
+template< int D > using SimpleEuklidianMetricFint64 = EuklidianMetric< D,
+    int64_t, 
+    SimplePointFint64 >;
 
 //template< int D >
 //using EuklidianSpace = LinearSpace<D, EuklidianMetric>;
