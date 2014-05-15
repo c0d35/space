@@ -6,7 +6,7 @@ int main()
 {
 
 
-    SimpleEuklidianSpace< 6 >::Vector v;
+    SimpleEuklidianSpaceFdouble< 6 >::Vector v;
 	AbstractSimplex< 3, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, Set< 3 >  > atetra;
 	Simplex< 6 > simplex6;
 	std::cout << "atetra::d = " << decltype(atetra)::d << std::endl;
