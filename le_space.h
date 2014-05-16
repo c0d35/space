@@ -702,4 +702,5 @@ struct ExteriorAlgebra: GradedAlgebra< D >
 //exterior algebra -> simplicial complex
 //derived from power set(?) correspondency \f$P(X) \cong \{0, 1\}^X\f$
 //from char. function to isomorphism.
+//metrical dependency of the cell decomposition
 #endif
