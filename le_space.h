@@ -14,6 +14,7 @@
 #define LE_SPACE_H
 
 #include <cstddef>
+#include <cstdint>
 //some helpers, rewrite them with constexpr
 
 template< bool _cond, class _then, class _else >
@@ -622,6 +623,15 @@ struct HammingMetric
 {
 };
 
+//to be used in the constructors of spaces
+template< class X, class Y >
+struct MorphismTrait
+{
+    void morph(X x, Y y)
+    {
+    }
+
+};
 
 template < ArchType a, int D, typename Type > struct EuklidianMetricTrait { };
 
@@ -690,4 +700,6 @@ struct ExteriorAlgebra: GradedAlgebra< D >
 //Grassmannian(k, V) is a algebraic subvariety of projective space P(Λ^kV) ->
 //Pluecker embedding
 //exterior algebra -> simplicial complex
+//derived from power set(?) correspondency \f$P(X) \cong \{0, 1\}^X\f$
+//from char. function to isomorphism.
 #endif
