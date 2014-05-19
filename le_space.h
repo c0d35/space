@@ -1120,9 +1120,6 @@ class	HyperCubeTree
                 insertPoint(points[start], keys[start]);
 
         }
-
-
-
         typedef Containment< HyperCube, Allocator< HyperCube > > Layer;
 
         inline Layer& getLayer(int level)
