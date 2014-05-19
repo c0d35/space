@@ -96,7 +96,8 @@ template< int S > struct SimpleLargerInteger{
 
 template< int S > struct IntegerChooser
 {
-	typedef typename IF< S <= sizeof(uint8_t), uint8_t,
+	typedef typename 
+        IF< S <= sizeof(uint8_t), uint8_t,
 		IF< S <= sizeof(uint16_t), uint16_t,
 		IF< S <= sizeof(uint32_t), uint32_t,
 		IF< S <= sizeof(uint64_t), uint64_t,
@@ -648,7 +649,7 @@ struct EuklidianMetric
     //draftly putting Morton Code into the metric
     //only makes sense with integer
 
-    static inline ValueType interleavetokey(Point p)
+    static inline ValueType morton_encode(Point p)
 	{
 		KeyType pre_key = 0;
 		KeyType mask = 1;
@@ -929,7 +930,7 @@ template< int D, int M,
             Indices l_surrounding;
             KeyType key;
             KeyType key_back;
-            key = MetricTraitT::interleavetokey(p);
+            key = MetricTraitT::morton_encode(p);
             key_back = key;
             int i;
 
@@ -960,7 +961,7 @@ template< int D, int M,
         {   
             if(level == 0) return true;
 
-            KeyType key = MetricTraitT::interleavetokey(p);
+            KeyType key = MetricTraitT::morton_encode(p);
             HyperCube *hypercuberef = &hypercubes[0][0];
 
             int next;
