@@ -784,13 +784,11 @@ template< int D, int M,
         typedef typename MetricTraitT::KeyType KeyType;
         typedef typename MetricTraitT::Point PointT;
         enum {
-            dimension = D, alex_dimension = M,
+            d = D, alex_dimension = M,
             numofsubkeys = (sizeof(ValueType) * 8) * D / (D + M), 
             numoflevels = (sizeof(ValueType) * 8),
-            numofchilds = ipow< 2, dimension + alex_dimension >::value,
+            numofchilds = ipow< 2, d + alex_dimension >::value,
             numofneighbours = ipow< 3, D >::eval - 1 };
-
-
         HyperCubeTree()
         {
             KeyType k = 0;
@@ -800,12 +798,6 @@ template< int D, int M,
             hypercubes[0].push_back(cube);
             counter[0] = 1;
         }
-        /**
-         *
-         * quick hack simple graph
-         *
-         */
-
         struct HyperCube
         {
             public:
