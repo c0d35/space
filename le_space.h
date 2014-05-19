@@ -1067,8 +1067,6 @@ class	HyperCubeTree
             HyperCube l_c;
 			int pos, next;
             unsigned int subkey;
-
-//#pragma omp parallel for
             hypercuberef->weight++;
             hypercuberef->age = 0;
             for(i = 1;i <= numoflevels; i++)
