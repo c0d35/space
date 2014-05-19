@@ -776,13 +776,13 @@ struct ExteriorAlgebra: GradedAlgebra< D >
 template< int D, int M,
     template< int __D > class MetricTrait, template< class U, class V >
     class Containment, template< class U > class Allocator  >
-class	HyperCubeTree
+    class	HyperCubeTree
 {
-	public:
-		typedef MetricTrait< D > MetricTraitT;
-		typedef typename MetricTraitT::ValueType ValueType;
-		typedef typename MetricTraitT::KeyType KeyType;
-		typedef typename MetricTraitT::Point PointT;
+    public:
+        typedef MetricTrait< D > MetricTraitT;
+        typedef typename MetricTraitT::ValueType ValueType;
+        typedef typename MetricTraitT::KeyType KeyType;
+        typedef typename MetricTraitT::Point PointT;
         enum {
             dimension = D, alex_dimension = M,
             numofsubkeys = (sizeof(ValueType) * 8) * D / (D + M), 
@@ -790,38 +790,38 @@ class	HyperCubeTree
             numofchilds = ipow< 2, dimension + alex_dimension >::value,
             numofneighbours = ipow< 3, D >::eval - 1 };
 
-		
-		HyperCubeTree()
-		{
-			KeyType k = 0;
-			PointT l_p; //l_p[0] = 0; l_p[1] = 0;
+
+        HyperCubeTree()
+        {
+            KeyType k = 0;
+            PointT l_p; //l_p[0] = 0; l_p[1] = 0;
             reserve();
-			HyperCube cube(k, l_p, 0);
-			hypercubes[0].push_back(cube);
-			counter[0] = 1;
-		}
+            HyperCube cube(k, l_p, 0);
+            hypercubes[0].push_back(cube);
+            counter[0] = 1;
+        }
         /**
          *
          * quick hack simple graph
          *
          */
 
-		struct HyperCube
-		{
-			public:
+        struct HyperCube
+        {
+            public:
                 typename IntegerChooser< 
                     (ipow< 3, D >::eval - 1) / 8 
                     >::IntegerType neighbourpattern;
                 //using lossy state/phase space
                 //communication for the intrawebz
-				int childs[numofchilds];
+                int childs[numofchilds];
                 bool isleaf;
-				KeyType key;
-				int level;
+                KeyType key;
+                int level;
                 int weight;
                 int age;
                 int feature_index;
-				PointT p; //quick hack reference/index
+                PointT p; //quick hack reference/index
                 //Containment::difference_type point_id;
                 ptrdiff_t vertex_id; //reference to 0-simplex the cube is
                 //containing; assuming one simplicial
@@ -829,48 +829,48 @@ class	HyperCubeTree
 
 
 
-				HyperCube(const HyperCube& hc)
-				{
-					for(int i = 0; i < numofchilds; i++)
-					{
-						childs[i] = hc.childs[i];
-					}
-					level = hc.level;
-					key = hc.key;
-					p.set(hc.p);
+                HyperCube(const HyperCube& hc)
+                {
+                    for(int i = 0; i < numofchilds; i++)
+                    {
+                        childs[i] = hc.childs[i];
+                    }
+                    level = hc.level;
+                    key = hc.key;
+                    p.set(hc.p);
                     isleaf = hc.isleaf;
                     weight = hc.weight;
                     age = hc.age;
 
-	
-				}
-				HyperCube()
-				{
-					for(int i = 0; i < numofchilds; i++)
-					{
-						childs[i] = -1;
-					}
-					level = -1;
+
+                }
+                HyperCube()
+                {
+                    for(int i = 0; i < numofchilds; i++)
+                    {
+                        childs[i] = -1;
+                    }
+                    level = -1;
                     isleaf = false;
-					key = 0;
+                    key = 0;
                     weight = 0;
                     age = 0;
 
-				}
+                }
 
-				HyperCube(KeyType &k, PointT _p, int _level)
-				{
-					for(int i = 0; i < numofchilds; i++)
-					{
-						childs[i] = -1;
-					}
-					level = _level;
-					key = k;
-					p = _p;
+                HyperCube(KeyType &k, PointT _p, int _level)
+                {
+                    for(int i = 0; i < numofchilds; i++)
+                    {
+                        childs[i] = -1;
+                    }
+                    level = _level;
+                    key = k;
+                    p = _p;
                     weight = 0;
 
-				}
-		};
+                }
+        };
 
         inline void resize()
         {
@@ -884,7 +884,7 @@ class	HyperCubeTree
 
             }
         }
-       inline void reserve()
+        inline void reserve()
         {
             for(int i = 0; i < numoflevels; i++)
             {
@@ -909,18 +909,18 @@ class	HyperCubeTree
 
             }
 
-			KeyType k = 0;
-			PointT l_p; //l_p[0] = 0; l_p[1] = 0;
-			HyperCube cube(k, l_p, 0);
-			hypercubes[0].push_back(cube);
-			counter[0] = 1;
+            KeyType k = 0;
+            PointT l_p; //l_p[0] = 0; l_p[1] = 0;
+            HyperCube cube(k, l_p, 0);
+            hypercubes[0].push_back(cube);
+            counter[0] = 1;
         }
         typedef typename Containment< HyperCube,
                 Allocator< HyperCube > >::difference_type diff_type;
         typedef Containment< diff_type, Allocator< diff_type > > Indices;
         inline Indices getAdjacencies(const PointT &p, int level)
         {
-            
+
             //generate vectors to add
             PointT l_adjvec[ ipow< 3, D >::eval];
             PointT l_basevec[ D ];
@@ -937,12 +937,12 @@ class	HyperCubeTree
             KeyType key;
             KeyType key_back;
             key = MetricTraitT::interleavetokey(p);
-			key_back = key;
+            key_back = key;
             int i;
 
-			HyperCube *hypercuberef = &hypercubes[0][0];
+            HyperCube *hypercuberef = &hypercubes[0][0];
             HyperCube l_c;
-			int pos, next, prev;
+            int pos, next, prev;
             unsigned int subkey;
 
             for(i = 1;i < level; i++)
@@ -951,12 +951,12 @@ class	HyperCubeTree
                             * (D + M)));
                 prev = next;
                 next = hypercuberef->childs[subkey];
-				if(next == -1)
-				{
+                if(next == -1)
+                {
                     return l_surrounding;
-				}
-				hypercuberef = &(hypercubes[i][next]);
-			}
+                }
+                hypercuberef = &(hypercubes[i][next]);
+            }
 
             HyperCube *parent = &(hypercubes[i][prev]);
             l_surrounding.push_back(next);
@@ -968,9 +968,9 @@ class	HyperCubeTree
             if(level == 0) return true;
 
             KeyType key = MetricTraitT::interleavetokey(p);
-			HyperCube *hypercuberef = &hypercubes[0][0];
+            HyperCube *hypercuberef = &hypercubes[0][0];
 
-			int next;
+            int next;
             unsigned int subkey;
 
             for(int i = 1;i < level; i++)
@@ -978,31 +978,31 @@ class	HyperCubeTree
                 subkey = (numofchilds - 1) & (key >> ((numoflevels - i)
                             * (D + M)));
                 next = hypercuberef->childs[subkey];
-				if(next == -1)
-				{
+                if(next == -1)
+                {
                     return false;
-				}
-				hypercuberef = &(hypercubes[i][next]);
-			}
+                }
+                hypercuberef = &(hypercubes[i][next]);
+            }
 
             return false;
         }
 
-		inline HyperCube& getCubebyIndex(KeyType key)
-		{
-			HyperCube *hypercubep = &hypercubes[0][0];
-			for(int i = 1; i < numofsubkeys; i++)
-			{
+        inline HyperCube& getCubebyIndex(KeyType key)
+        {
+            HyperCube *hypercubep = &hypercubes[0][0];
+            for(int i = 1; i < numofsubkeys; i++)
+            {
                 int subkey = (numofchilds - 1) &
                     (key >> ((numoflevels - i) * (D + M)));
                 int next = hypercubep->childs[subkey];
-				if(next == -1) break;
-				hypercubep = &hypercubes[i][next];
+                if(next == -1) break;
+                hypercubep = &hypercubes[i][next];
 
-			}
+            }
 
-			return *hypercubep;
-		}
+            return *hypercubep;
+        }
 
         inline bool insertPoint(const PointT &p, const KeyType key)
         {
@@ -1033,8 +1033,8 @@ class	HyperCubeTree
                 subkey = (numofchilds - 1) &
                     (key >> ((numoflevels - i) * (D + M)));
                 next = hypercuberef->childs[subkey];
-				if(next == -1)
-				{
+                if(next == -1)
+                {
                     {
                         pos = counter[i];
                         l_c.key = key_back;
@@ -1046,28 +1046,28 @@ class	HyperCubeTree
                         next = pos;
                         counter[i]++;
                     }
-				}
+                }
                 hypercuberef->age = 0;
-				hypercuberef = &(hypercubes[i][next]);
-			}
+                hypercuberef = &(hypercubes[i][next]);
+            }
 
             hypercubes[numoflevels - 1][next].isleaf = true;
-			return pos;
-		}
+            return pos;
+        }
 
-	    inline int insertPoint(const PointT &p)
-		{
+        inline int insertPoint(const PointT &p)
+        {
             PointT p_b;
             p_b.set(p);
-            
+
             KeyType key_back;
             KeyType key = MetricTraitT::interleavetokey(p);
-			key_back = key;
+            key_back = key;
             int i;
 
-			HyperCube *hypercuberef = &hypercubes[0][0];
+            HyperCube *hypercuberef = &hypercubes[0][0];
             HyperCube l_c;
-			int pos, next;
+            int pos, next;
             unsigned int subkey;
             hypercuberef->weight++;
             hypercuberef->age = 0;
@@ -1076,8 +1076,8 @@ class	HyperCubeTree
                 subkey = (numofchilds - 1) &
                     (key >> ((numoflevels - i) * (D + M)));
                 next = hypercuberef->childs[subkey];
-				if(next == -1)
-				{
+                if(next == -1)
+                {
                     {
                         pos = counter[i];
                         l_c.key = key_back;
@@ -1088,14 +1088,14 @@ class	HyperCubeTree
                         next = pos;
                         counter[i]++;
                     }
-				}
+                }
                 hypercuberef->age = 0;
-				hypercuberef = &(hypercubes[i][next]);
-			}
+                hypercuberef = &(hypercubes[i][next]);
+            }
 
             hypercubes[numoflevels - 1][next].isleaf = true;
-			return pos;
-		}
+            return pos;
+        }
 
 
         inline void genKeys(const typename Containment< 
@@ -1133,7 +1133,7 @@ class	HyperCubeTree
         Containment< KeyType, Allocator< KeyType > > keys;
         int sub_keys[numofsubkeys];
         int counter[numoflevels + 1];
-	
+
 };
 // vector <-> polynome / functional / function
 //todo AS <-> multivectors/pseudoscalar (wedge product &
