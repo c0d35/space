@@ -32,12 +32,6 @@ struct IF< false, _then, _else >
 template< int N > struct ifact{ enum { eval = N * ifact< N - 1>::eval }; };
 template <> struct ifact< 0 > { enum { eval = 1 }; };
 template< int N, int K >
-struct ibinom{ 
-    enum { 
-        eval = ifact< N >::eval / ( ifact< K >::eval *  ifact< N - K >::eval)
-    };
-};
-template< int N, int K >
 struct nchoosek{ 
     enum { 
         eval = ifact< N >::eval / ( ifact< K >::eval *  ifact< N - K >::eval)
