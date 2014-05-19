@@ -588,7 +588,7 @@ struct LinearSpace: public MetricSpace< D, _M >
         enum { k = 0, d = D };
 
     };*/
-    struct Vertex: Simplex< 1 >//derive from simplex, cause every
+    struct Vertex: Simplex< 0 >//derive from simplex, cause every
                    //linear space is hausdorffian (kolomogorov T_2),
                    //so i hope that's okay
     {
@@ -621,7 +621,8 @@ struct LinearSpace: public MetricSpace< D, _M >
         }
     };
 
-    typedef Vertex Vector; //i guess, every vector is a 1-cell, so ...
+    typedef typename ExteriorPower< 1, 6, LinearSpace >::Vector Vector;
+    //typedef Vertex Vector; //i guess, every vector is a 1-cell, so ...
 
     Vector e[D]; //basis
 
