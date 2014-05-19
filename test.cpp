@@ -1,6 +1,8 @@
 #include "le_space.h"
 #include <vector>
 #include <iostream>
+typedef HyperCubeTree< 3, 0, SimpleEuklidianMetricFint16 , std::vector, std::allocator > HCTree3;
+//typedef HyperCubeTree< 3, 0, unsigned short, SimplePoint, DefaultEuklidianMetricTrait, std::vector, std::allocator >::PointT HCTree3Point;
 
 int main()
 {

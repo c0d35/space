@@ -710,10 +710,15 @@ template < ArchType a, int D, typename Type > struct EuklidianMetricTrait { };
 
 
 template< int D > using SimplePointFdouble = SimplePoint< D, double >;
+template< int D > using SimplePointFint16 = SimplePoint< D, int16_t >;
+template< int D > using SimplePointFint32 = SimplePoint< D, int32_t >;
 template< int D > using SimplePointFint64 = SimplePoint< D, int64_t >;
 template< int D > using SimpleEuklidianMetricFdouble = EuklidianMetric< D,
     double,
     SimplePointFdouble >;
+template< int D > using SimpleEuklidianMetricFint16 = EuklidianMetric< D,
+    int16_t, 
+    SimplePointFint16 >;
 template< int D > using SimpleEuklidianMetricFint64 = EuklidianMetric< D,
     int64_t, 
     SimplePointFint64 >;
@@ -768,19 +773,16 @@ struct ExteriorAlgebra: GradedAlgebra< D >
  *
  */
 
-template< int D, int M, typename Type, template < int _D, typename _Type,
-    typename ... _CArgs > class Point,
-    template< int __D, typename __Type,
-    template < int ___D, typename ___Type, typename ... _CArgs >
-    class __Point > class MetricTrait, template< class U, class V >
+template< int D, int M,
+    template< int __D > class MetricTrait, template< class U, class V >
     class Containment, template< class U > class Allocator  >
 class	HyperCubeTree
 {
 	public:
-		typedef typename MetricTrait< D, Type, Point >::ValueType ValueType;
-		typedef typename MetricTrait< D, Type, Point >::KeyType KeyType;
-		typedef typename MetricTrait< D, Type, Point>::Point PointT;
-		typedef MetricTrait< D, Type, Point > MetricTraitT;
+		typedef MetricTrait< D > MetricTraitT;
+		typedef typename MetricTraitT::ValueType ValueType;
+		typedef typename MetricTraitT::KeyType KeyType;
+		typedef typename MetricTraitT::Point PointT;
         enum {
             dimension = D, alex_dimension = M,
             numofsubkeys = (sizeof(ValueType) * 8) * D / (D + M), 
