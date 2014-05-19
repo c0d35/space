@@ -102,36 +102,36 @@ template< int S > struct SimpleLargerInteger{
 
 template< int S > struct IntegerChooser
 {
-	typedef typename IF< S <= sizeof(unsigned char), unsigned char,
-		IF< S <= sizeof(unsigned short), unsigned short,
-		IF< S <= sizeof(unsigned int), unsigned int,
-		IF< S <= sizeof(unsigned long long), unsigned long long,
+	typedef typename IF< S <= sizeof(uint8_t), uint8_t,
+		IF< S <= sizeof(uint16_t), uint16_t,
+		IF< S <= sizeof(uint32_t), uint32_t,
+		IF< S <= sizeof(uint64_t), uint64_t,
         SimpleLargerInteger< S > > > > >::RET IntegerType;
 };
 
 template< > struct IntegerChooser< 3 >
 {
     enum { size = 3 };
-    typedef unsigned int IntegerType;
+    typedef uint32_t IntegerType;
 };
 
 template< > struct IntegerChooser< 4 >
 {
 	enum { size = 4};
-	typedef unsigned int IntegerType;
+	typedef uint32_t IntegerType;
 };
 
 
 template< > struct IntegerChooser< 6 >
 {
 	enum { size = 6};
-	typedef __attribute__ ((aligned (1))) unsigned long long IntegerType;
+	typedef __attribute__ ((aligned (1))) uint64_t IntegerType;
 };
 
 template< > struct IntegerChooser< 8 >
 {
 	enum { size = 8};
-	typedef __attribute__ ((aligned (32))) unsigned long long IntegerType;
+	typedef __attribute__ ((aligned (32))) uint64_t IntegerType;
 };
 
 
@@ -581,6 +581,8 @@ struct LinearSpace: public MetricSpace< D, _M >
     enum{ d = D };
 
     typedef _M< D > Metric;
+    typedef typename Metric::KeyType KeyType;
+    typedef typename Metric::ValueType ValueType;
     //typedef double ValueType;
     //should i pull the Tensor Definitions from the exterior algebra?
     //ok, let's do it :|
@@ -719,12 +721,24 @@ template< int D > using SimpleEuklidianMetricFdouble = EuklidianMetric< D,
 template< int D > using SimpleEuklidianMetricFint16 = EuklidianMetric< D,
     int16_t, 
     SimplePointFint16 >;
+template< int D > using SimpleEuklidianMetricFint32 = EuklidianMetric< D,
+    int32_t, 
+    SimplePointFint16 >;
 template< int D > using SimpleEuklidianMetricFint64 = EuklidianMetric< D,
     int64_t, 
     SimplePointFint64 >;
 
 //template< int D >
 //using EuklidianSpace = LinearSpace<D, EuklidianMetric>;
+template< int D >
+using SimpleEuklidianSpaceFint16 = LinearSpace< D,
+      SimpleEuklidianMetricFint16 >;
+template< int D >
+using SimpleEuklidianSpaceFint32 = LinearSpace< D,
+      SimpleEuklidianMetricFint32 >;
+template< int D >
+using SimpleEuklidianSpaceFint64 = LinearSpace< D,
+      SimpleEuklidianMetricFdouble >;
 template< int D >
 using SimpleEuklidianSpaceFdouble = LinearSpace< D,
       SimpleEuklidianMetricFdouble >;
@@ -774,20 +788,20 @@ struct ExteriorAlgebra: GradedAlgebra< D >
  */
 
 template< int D, int M,
-    template< int __D > class MetricTrait, template< class U, class V >
+    template< int __D > class Space, template< class U, class V >
     class Containment, template< class U > class Allocator  >
     class	HyperCubeTree
 {
     public:
-        typedef MetricTrait< D > MetricTraitT;
+        typedef Space< D > MetricTraitT;
         typedef typename MetricTraitT::ValueType ValueType;
         typedef typename MetricTraitT::KeyType KeyType;
-        typedef typename MetricTraitT::Point PointT;
+        typedef typename MetricTraitT::Vector PointT;
         enum {
             d = D, alex_dimension = M,
             numofsubkeys = (sizeof(ValueType) * 8) * D / (D + M), 
             numoflevels = (sizeof(ValueType) * 8),
-            numofchilds = ipow< 2, d + alex_dimension >::value,
+            numofchilds = ipow< 2, d + alex_dimension >::eval,
             numofneighbours = ipow< 3, D >::eval - 1 };
         HyperCubeTree()
         {
@@ -819,8 +833,6 @@ template< int D, int M,
                 //containing; assuming one simplicial
                 //decomposition/graph per tree layer
 
-
-
                 HyperCube(const HyperCube& hc)
                 {
                     for(int i = 0; i < numofchilds; i++)
@@ -829,11 +841,9 @@ template< int D, int M,
                     }
                     level = hc.level;
                     key = hc.key;
-                    p.set(hc.p);
                     isleaf = hc.isleaf;
                     weight = hc.weight;
                     age = hc.age;
-
 
                 }
                 HyperCube()
@@ -887,9 +897,6 @@ template< int D, int M,
                 counter[i] = 0;
 
             }
-
-
-
         }
 
         inline void clear()
@@ -1030,7 +1037,6 @@ template< int D, int M,
                     {
                         pos = counter[i];
                         l_c.key = key_back;
-                        l_c.p.set(p_b);
                         l_c.level = i;
                         hypercubes[i].push_back(l_c);
                         hypercuberef->childs[subkey] = pos;
@@ -1045,78 +1051,6 @@ template< int D, int M,
 
             hypercubes[numoflevels - 1][next].isleaf = true;
             return pos;
-        }
-
-        inline int insertPoint(const PointT &p)
-        {
-            PointT p_b;
-            p_b.set(p);
-
-            KeyType key_back;
-            KeyType key = MetricTraitT::interleavetokey(p);
-            key_back = key;
-            int i;
-
-            HyperCube *hypercuberef = &hypercubes[0][0];
-            HyperCube l_c;
-            int pos, next;
-            unsigned int subkey;
-            hypercuberef->weight++;
-            hypercuberef->age = 0;
-            for(i = 1;i <= numoflevels; i++)
-            {
-                subkey = (numofchilds - 1) &
-                    (key >> ((numoflevels - i) * (D + M)));
-                next = hypercuberef->childs[subkey];
-                if(next == -1)
-                {
-                    {
-                        pos = counter[i];
-                        l_c.key = key_back;
-                        l_c.p.set(p_b);
-                        l_c.level = i;
-                        hypercubes[i].push_back(l_c);
-                        hypercuberef->childs[subkey] = pos;
-                        next = pos;
-                        counter[i]++;
-                    }
-                }
-                hypercuberef->age = 0;
-                hypercuberef = &(hypercubes[i][next]);
-            }
-
-            hypercubes[numoflevels - 1][next].isleaf = true;
-            return pos;
-        }
-
-
-        inline void genKeys(const typename Containment< 
-                PointT, Allocator< PointT > >::difference_type start,
-                const typename Containment< PointT,
-                Allocator< PointT > >::difference_type stop)
-        {
-#pragma omp parallel
-            for(; start < stop; start++)
-                keys[start] = MetricTraitT::interleavetokey(points[start]);
-
-        }
-
-        inline void genTree(const typename Containment<
-                PointT, Allocator< PointT > >::difference_type start,
-                const typename Containment< PointT,
-                Allocator< PointT > >::difference_type stop)
-        {
-            genKeys(start, stop);
-#pragma omp parallel
-            for(; start < stop; start++)
-                insertPoint(points[start], keys[start]);
-
-        }
-        typedef Containment< HyperCube, Allocator< HyperCube > > Layer;
-
-        inline Layer& getLayer(int level)
-        {
-            return hypercubes[level % numoflevels];
         }
 
         Containment< HyperCube, Allocator< HyperCube > >
