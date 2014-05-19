@@ -1085,7 +1085,6 @@ class	HyperCubeTree
                         l_c.level = i;
                         hypercubes[i].push_back(l_c);
                         hypercuberef->childs[subkey] = pos;
-
                         next = pos;
                         counter[i]++;
                     }
