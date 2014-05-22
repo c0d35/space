@@ -171,7 +171,7 @@ struct MetricSpace: UniformSpace < _Dim > {};
 /**
  * kinda abstract simplex(?), one example for an element
  */
-template< int _Dim, typename _Trait, LinkType _LType, AccessScheme _AScheme,
+template< int _Dim, LinkType _LType, AccessScheme _AScheme,
     template< class U , class V > class Containment , template< class U >
     class Allocator, class _Space > class AbstractSimplicialComplex{};
 template< typename _ASD > struct AbstractSimplicialComplexTopologyTrait{};
@@ -266,10 +266,10 @@ template< class _IT, class _SC > struct IterFiller< 0, _IT, _SC >{
     static inline void fill(_IT&){}
 };
 
-template< int _Dim, class _Trait,
+template< int _Dim,
     template< class U , class V > class _Containment,
     template< class U > class _Allocator, class _Space> 
-    class AbstractSimplicialComplex< _Dim, _Trait, 
+    class AbstractSimplicialComplex< _Dim,
     LinkType::Single, AccessScheme::Index,
     _Containment, _Allocator, _Space >
 {
@@ -287,15 +287,15 @@ template< int _Dim, class _Trait,
         }
         void* simplex_containers[_Dim];
 };
-template< int _Dim, class _Trait, LinkType _LType, AccessScheme _AScheme,
+template< int _Dim, LinkType _LType, AccessScheme _AScheme,
     template< class U , class V > class _Containment,
     template< class U > class _Allocator, class _Space> 
 class AbstractSimplicialComplexIterator<
-AbstractSimplicialComplex< _Dim, _Trait, _LType,
+AbstractSimplicialComplex< _Dim, _LType,
     _AScheme, _Containment, _Allocator, _Space > >
 {
     public:
-        typedef AbstractSimplicialComplex< _Dim, _Trait, _LType,
+        typedef AbstractSimplicialComplex< _Dim, _LType,
                 _AScheme, _Containment, _Allocator, _Space > ASCT;
         typedef AbstractSimplicialComplexTopologyTrait< ASCT > ASCTopoT;
         typedef AbstractSimplicialComplexIteratorFunctionTrait<
@@ -334,16 +334,16 @@ AbstractSimplicialComplex< _Dim, _Trait, _LType,
         ASCT	*m_sd;
 };
 
-template< int _Dim, class _Trait,
+template< int _Dim,
     template< class U , class V > class _Containment,
     template< class U > class _Allocator, class _Space> 
 class AbstractSimplicialComplexTopologyTrait<  
-AbstractSimplicialComplex< _Dim, _Trait, LinkType::Single,
+AbstractSimplicialComplex< _Dim, LinkType::Single,
     AccessScheme::Index, _Containment, _Allocator, _Space > >
 {
     public:
 
-        typedef AbstractSimplicialComplex< _Dim, _Trait,
+        typedef AbstractSimplicialComplex< _Dim,
                 LinkType::Single, AccessScheme::Index, _Containment,
                 _Allocator, _Space > ASCT;
         typedef AbstractSimplicialComplexIterator< ASCT > IterT;
@@ -491,8 +491,17 @@ AbstractSimplicialComplex< _Dim, _Trait, LinkType::Single,
 
 #include <vector>
 
+//specialise the simplices for proper spaces
 template< int D > using Simplex = AbstractSimplex< D, LinkType::Single,
     AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< D > >;
+template< int D > using SimplicialComplex = AbstractSimplicialComplex< D,
+    LinkType::Single, AccessScheme::Index, std::vector, std::allocator,
+    TopologicalSpace< D > >;
+template< int D > using SimplicialComplexTopologyTrait =
+AbstractSimplicialComplexTopologyTrait < SimplicialComplex< D > >;
+template< int D > using SimplicialComplexIterator = AbstractSimplicialComplexIterator< SimplicialComplex< D > >;
+
+
 
 
 //simple implementation of a point
@@ -507,6 +516,7 @@ struct SimplePoint
         typedef Type ValueType;
 		_Type values[D];
 		inline _Type& operator [](ptrdiff_t n) { return values[n];}
+
 		SimplePoint()
 		{
 			for(ptrdiff_t i = 0; i < D; i++) values[i] = 0;
@@ -621,9 +631,10 @@ struct LinearSpace: public MetricSpace< D, _M >
         }
     };
 
-    typedef typename ExteriorPower< 1, 6, LinearSpace >::Vector Vector;
+    typedef typename ExteriorPower< 1, d, LinearSpace >::Vector Vector;
     //typedef Vertex Vector; //i guess, every vector is a 1-cell, so ...
 
+    SimplicialComplex< D > simplicial_decomposition;
     Vector e[D]; //basis
 
 };
@@ -903,7 +914,6 @@ template< int D, int M,
                 counter[i] = 0;
 
             }
-
             KeyType k = 0;
             PointT l_p; //l_p[0] = 0; l_p[1] = 0;
             HyperCube cube(k, l_p, 0);
@@ -1057,6 +1067,74 @@ template< int D, int M,
         int counter[numoflevels + 1];
 
 };
+
+template < int D, template < int _D > class M >
+struct MortonSpace: public TopologicalSpace< D >
+{
+};
+
+template < int D, template< int _D > class _M >
+struct LinearSpaceCompressed: public MetricSpace< D, _M >
+{
+    enum{ d = D };
+
+    typedef _M< D > Metric;
+    typedef HyperCubeTree< D, 0, _M, std::vector, std::allocator > Tree;
+    typedef typename Metric::KeyType KeyType;
+    typedef typename Metric::ValueType ValueType;
+    //typedef double ValueType;
+    //should i pull the Tensor Definitions from the exterior algebra?
+    //ok, let's do it :|
+    typedef typename ExteriorPower< 0, 0, LinearSpaceCompressed>::Vector Scalar;
+    /*
+    struct Scalar: Simplex< 0 >
+    {
+        enum { k = 0, d = D };
+
+    };*/
+    struct Vertex: Simplex< 0 >//derive from simplex, cause every
+                   //linear space is hausdorffian (kolomogorov T_2),
+                   //so i hope that's okay
+    {
+        enum { k = 1, d = D};
+        Scalar v[D];
+        inline Scalar& operator [](ptrdiff_t n) { return v[n];}
+        Vertex()
+        {
+            //for(ptrdiff_t i = 0; i < D; i++) v[i] = 0;
+        }
+        Vertex( std::initializer_list< Scalar > val)
+        {
+            ptrdiff_t i = 0;
+          //  for(auto v : val) v[i++] = v;
+        }
+        Vertex(const Vertex& p)
+        {
+            for(ptrdiff_t i = 0; i < D; i++)
+            {
+                v[i] = p.v[i];
+            }
+        }
+        inline Vertex& operator = (const Vertex& p)
+        {
+            for(ptrdiff_t i = 0; i < D; i++)
+            {
+                v[i] = p.v[i];
+            }
+            return *this;
+        }
+    };
+
+    typedef typename ExteriorPower< 1, d, LinearSpaceCompressed >::Vector
+        Vector;
+    //typedef Vertex Vector; //i guess, every vector is a 1-cell, so ...
+
+    Tree access_tree;
+    SimplicialComplex< D > simplicial_decomposition;
+    Vector e[D]; //basis
+
+};
+
 // vector <-> polynome / functional / function
 //todo AS <-> multivectors/pseudoscalar (wedge product &
 //other clifford algebra stuff) half simplices -> SO(n)
