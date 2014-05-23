@@ -1,15 +1,15 @@
 #include "le_space.h"
 #include <vector>
 #include <iostream>
-typedef HyperCubeTree< 3, 0, SimpleEuklidianSpaceFint16 , std::vector, std::allocator > HCTree3;
+typedef HyperCubeTree< 3, 0, SimpleEuklidianSpaceFuint16 , std::vector, std::allocator > HCTree3;
 //typedef HyperCubeTree< 3, 0, unsigned short, SimplePoint, DefaultEuklidianMetricTrait, std::vector, std::allocator >::PointT HCTree3Point;
 int main()
 {
     
     HCTree3 tree;
     SimpleEuklidianSpaceFdouble< 6 >::Vector v;
-    EuklidianSpaceCompressedFint16< 3 > space;
-    EuklidianSpaceCompressedFint16< 3 >::PointT point = {1, 2, 3};
+    EuklidianSpaceCompressedFuint16< 3 > space;
+    EuklidianSpaceCompressedFuint16< 3 >::PointT point = {1, 2, 3};
     space.insert(point);
 
 	AbstractSimplex< 3, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, Set< 3 >  > atetra;

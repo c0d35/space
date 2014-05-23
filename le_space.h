@@ -740,33 +740,33 @@ template < ArchType a, int D, typename Type > struct EuklidianMetricTrait { };
 
 
 template< int D > using SimplePointFdouble = SimplePoint< D, double >;
-template< int D > using SimplePointFint16 = SimplePoint< D, uint16_t >;
-template< int D > using SimplePointFint32 = SimplePoint< D, uint32_t >;
-template< int D > using SimplePointFint64 = SimplePoint< D, uint64_t >;
+template< int D > using SimplePointFuint16 = SimplePoint< D, uint16_t >;
+template< int D > using SimplePointFuint32 = SimplePoint< D, uint32_t >;
+template< int D > using SimplePointFuint64 = SimplePoint< D, uint64_t >;
 template< int D > using SimpleEuklidianMetricFdouble = EuklidianMetric< D,
     double,
     SimplePointFdouble >;
-template< int D > using SimpleEuklidianMetricFint16 = EuklidianMetric< D,
+template< int D > using SimpleEuklidianMetricFuint16 = EuklidianMetric< D,
     int16_t, 
-    SimplePointFint16 >;
-template< int D > using SimpleEuklidianMetricFint32 = EuklidianMetric< D,
+    SimplePointFuint16 >;
+template< int D > using SimpleEuklidianMetricFuint32 = EuklidianMetric< D,
     int32_t, 
-    SimplePointFint16 >;
-template< int D > using SimpleEuklidianMetricFint64 = EuklidianMetric< D,
+    SimplePointFuint16 >;
+template< int D > using SimpleEuklidianMetricFuint64 = EuklidianMetric< D,
     int64_t, 
-    SimplePointFint64 >;
+    SimplePointFuint64 >;
 
 //template< int D >
 //using EuklidianSpace = LinearSpace<D, EuklidianMetric>;
 template< int D >
-using SimpleEuklidianSpaceFint16 = LinearSpace< D,
-      SimpleEuklidianMetricFint16 >;
+using SimpleEuklidianSpaceFuint16 = LinearSpace< D,
+      SimpleEuklidianMetricFuint16 >;
 template< int D >
-using SimpleEuklidianSpaceFint32 = LinearSpace< D,
-      SimpleEuklidianMetricFint32 >;
+using SimpleEuklidianSpaceFuint32 = LinearSpace< D,
+      SimpleEuklidianMetricFuint32 >;
 template< int D >
-using SimpleEuklidianSpaceFint64 = LinearSpace< D,
-      SimpleEuklidianMetricFdouble >;
+using SimpleEuklidianSpaceFuint64 = LinearSpace< D,
+      SimpleEuklidianMetricFuint64 >;
 template< int D >
 using SimpleEuklidianSpaceFdouble = LinearSpace< D,
       SimpleEuklidianMetricFdouble >;
@@ -1216,14 +1216,14 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
 
 };
 template< int D >
-using EuklidianSpaceCompressedFint16 = LinearSpaceCompressed< D,
-      SimpleEuklidianMetricFint16 >;
+using EuklidianSpaceCompressedFuint16 = LinearSpaceCompressed< D,
+      SimpleEuklidianMetricFuint16 >;
 template< int D >
-using EuklidianSpaceCompressedFint32 = LinearSpaceCompressed< D,
-      SimpleEuklidianMetricFint32 >;
+using EuklidianSpaceCompressedFuint32 = LinearSpaceCompressed< D,
+      SimpleEuklidianMetricFuint32 >;
 template< int D >
-using EuklidianSpaceCompressedFint64 = LinearSpaceCompressed< D,
-      SimpleEuklidianMetricFdouble >;
+using EuklidianSpaceCompressedFuint64 = LinearSpaceCompressed< D,
+      SimpleEuklidianMetricFuint64 >;
 
 
 // vector <-> polynome / functional / function
