@@ -1145,6 +1145,12 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     typedef typename ExteriorPower< 0, 0, LinearSpaceCompressed>::Vector
         Scalar;
 
+    typedef MortonSimplicialComplexIterator< d, _M > Iterator;
+    /*
+    struct Iterator: MortonSimplicialComplexIterator < d, _M>
+    {
+    };
+    */
     struct Vertex: MortonSimplex< 0, _M >
     {
         enum { k = 1, d = D};
@@ -1178,6 +1184,15 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
 
     //typedef Vertex Vector; //i guess, every vector is a 1-cell, so ...
 
+    inline Iterator insert(Vertex &v)
+    {
+    }
+    inline Iterator insert(Vector &v)
+    {
+    }
+    inline Iterator insert(PointT &p)
+    {
+    }
     Tree access_tree;
     MortonSimplicialComplex< D, _M > simplicial_decomposition;
     Vector e[D]; //basis
