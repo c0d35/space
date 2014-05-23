@@ -667,7 +667,7 @@ struct EuklidianMetric
     //draftly putting Morton Code into the metric
     //only makes sense with integer
 
-    static inline ValueType morton_encode(Point p)
+    static inline KeyType morton_encode(Point p)
 	{
 		KeyType pre_key = 0;
 		KeyType mask = 1;
@@ -687,7 +687,7 @@ struct EuklidianMetric
     static inline Point morton_decode(KeyType k)
     {
         KeyType pre_key = k;
-        KeyType mask = 0x1;
+        KeyType mask = 1;
         Point p;
         for(int i = 0; i < (sizeof(KeyType) * 8); i++)
         {
@@ -740,9 +740,9 @@ template < ArchType a, int D, typename Type > struct EuklidianMetricTrait { };
 
 
 template< int D > using SimplePointFdouble = SimplePoint< D, double >;
-template< int D > using SimplePointFint16 = SimplePoint< D, int16_t >;
-template< int D > using SimplePointFint32 = SimplePoint< D, int32_t >;
-template< int D > using SimplePointFint64 = SimplePoint< D, int64_t >;
+template< int D > using SimplePointFint16 = SimplePoint< D, uint16_t >;
+template< int D > using SimplePointFint32 = SimplePoint< D, uint32_t >;
+template< int D > using SimplePointFint64 = SimplePoint< D, uint64_t >;
 template< int D > using SimpleEuklidianMetricFdouble = EuklidianMetric< D,
     double,
     SimplePointFdouble >;
@@ -1188,17 +1188,27 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     };
 
     //typedef Vertex Vector; //i guess, every vector is a 1-cell, so ...
-
+/*
     inline Iterator insert(Vertex &v)
     {
     }
+
     inline Iterator insert(Vector &v)
     {
     }
+    */
     //inline Iterator insert(PointT &p)
-    inline void insert(PointT &p)
+    inline KeyType insert(KeyType k)
     {
-        access_tree.insert(Metric::morton_encode(p));
+        return access_tree.insert(k);
+    }
+    inline KeyType insert(PointT &p)
+    {
+        return access_tree.insert(Metric::morton_encode(p));
+    }
+    inline void clear()
+    {
+        access_tree.clear();
     }
     Tree access_tree;
     MortonSimplicialComplex< D, _M > simplicial_decomposition;
