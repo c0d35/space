@@ -665,7 +665,6 @@ struct EuklidianMetric
 	{
 		KeyType pre_key = 0;
 		KeyType mask = 1;
-
         for(int i = 1; i <= (sizeof(ValueType) * 8); i++)
 		{
 
@@ -678,6 +677,22 @@ struct EuklidianMetric
         }
 		return pre_key;
 	}
+    
+    static inline Point morton_decode(KeyType k)
+    {
+        KeyType pre_key = k;
+        KeyType mask = 0x1;
+        Point p;
+        for(int i = 0; i < (sizeof(KeyType) * 8); i++)
+        {
+                p[(i + d - 1) % d] <<= 1;
+                p[(i + d - 1) % d] |= (pre_key >>
+                        ((sizeof(KeyType) * 8) - 1))  & mask;
+                pre_key <<= 1;
+        }
+        return p;
+    }
+
 };
 
 
