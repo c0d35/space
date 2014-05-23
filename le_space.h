@@ -647,6 +647,7 @@ struct EuklidianMetric
     enum{ d = D, };
     typedef _Type ValueType;
     typedef _Point< d > Point;
+    typedef typename _Point< d >::ValueType PValueType;
     template < int N > using ElementT = _Point < N >;
     typedef typename IntegerChooser< D * sizeof(ValueType) >::IntegerType 
         KeyType;
@@ -1137,6 +1138,7 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     typedef HyperCubeTree< D, 0, _M, std::vector, std::allocator > Tree;
     typedef typename Metric::KeyType KeyType;
     typedef typename Metric::ValueType ValueType;
+    typedef typename Metric::PValueType PValueType;
     typedef typename Metric::template ElementT< d > PointT;
     typedef typename ExteriorPower< 1, d, LinearSpaceCompressed >::Vector
         Vector;
@@ -1146,8 +1148,8 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     struct Vertex: MortonSimplex< 0, _M >
     {
         enum { k = 1, d = D};
-        inline KeyType operator [](ptrdiff_t n) { 
-            return this->v;
+        inline PValueType operator [](ptrdiff_t n) { 
+            return Metric::morton_decode(this->v)[n];
         }
         Vertex()
         {
