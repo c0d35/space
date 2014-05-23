@@ -511,7 +511,7 @@ template< int D > using SimplicialComplexIterator = AbstractSimplicialComplexIte
 
 //simple implementation of a point
 //kinda n-vector stuff if used in a vector-space
-
+#include <iostream>
 template< int D, typename _Type, typename ... _Args >
 struct SimplePoint
 {
@@ -529,7 +529,7 @@ struct SimplePoint
 		SimplePoint( std::initializer_list< Type > val)
 		{
 			ptrdiff_t i = 0;
-			for(auto v : val) values[i++] = v;
+			for(auto v : val){ values[i++] = v;}
 		}
 		SimplePoint(const SimplePoint& p)
 		{
@@ -1053,7 +1053,7 @@ template< int D, int M,
 
         }
 
-        inline int insertPoint(const KeyType k)
+        inline int insert(const KeyType k)
         {
             PointT p_b;
 
@@ -1195,7 +1195,8 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     inline Iterator insert(Vector &v)
     {
     }
-    inline Iterator insert(PointT &p)
+    //inline Iterator insert(PointT &p)
+    inline void insert(PointT &p)
     {
         access_tree.insert(Metric::morton_encode(p));
     }
