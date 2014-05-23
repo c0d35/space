@@ -776,6 +776,9 @@ template< int K, int D, class S > struct ExteriorPower: QuotientSpace< K, D >
     struct Vector: Simplex< K >
     {
         typename Metric::template ElementT< d > v;
+        //or should i use an vector of scalars (would be more canonical)
+        //todo:
+        //- check performance penalty
         Vector(){};
         inline typename Metric::ValueType operator [](ptrdiff_t n)
         {
@@ -1091,7 +1094,7 @@ struct MortonSpace: public TopologicalSpace< D >
 template < template< int D > class M > struct MortonSpace< 0, M >
 {
     typename M< 0 >::KeyType v;
-
+    //uint64_t v;
 };
 
 //specialise the simplices for morton space
@@ -1119,23 +1122,18 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     typedef HyperCubeTree< D, 0, _M, std::vector, std::allocator > Tree;
     typedef typename Metric::KeyType KeyType;
     typedef typename Metric::ValueType ValueType;
-    //typedef double ValueType;
-    //should i pull the Tensor Definitions from the exterior algebra?
-    //ok, let's do it :|
-    typedef typename ExteriorPower< 0, 0, LinearSpaceCompressed>::Vector Scalar;
-    /*
-    struct Scalar: Simplex< 0 >
-    {
-        enum { k = 0, d = D };
+    typedef typename Metric::template ElementT< d > PointT;
+    typedef typename ExteriorPower< 1, d, LinearSpaceCompressed >::Vector
+        Vector;
+    typedef typename ExteriorPower< 0, 0, LinearSpaceCompressed>::Vector
+        Scalar;
 
-    };*/
-    struct Vertex: Simplex< 0 >//derive from simplex, cause every
-                   //linear space is hausdorffian (kolomogorov T_2),
-                   //so i hope that's okay
+    struct Vertex: MortonSimplex< 0, _M >
     {
         enum { k = 1, d = D};
-        Scalar v[D];
-        inline Scalar& operator [](ptrdiff_t n) { return v[n];}
+        inline KeyType operator [](ptrdiff_t n) { 
+            return this->v;
+        }
         Vertex()
         {
             //for(ptrdiff_t i = 0; i < D; i++) v[i] = 0;
@@ -1147,27 +1145,31 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         }
         Vertex(const Vertex& p)
         {
+            /*
             for(ptrdiff_t i = 0; i < D; i++)
             {
                 v[i] = p.v[i];
             }
+            */
+            this->v = p.v;
         }
         inline Vertex& operator = (const Vertex& p)
         {
+            /*
             for(ptrdiff_t i = 0; i < D; i++)
             {
                 v[i] = p.v[i];
             }
+            */
+            this->v = p.v;
             return *this;
         }
     };
 
-    typedef typename ExteriorPower< 1, d, LinearSpaceCompressed >::Vector
-        Vector;
     //typedef Vertex Vector; //i guess, every vector is a 1-cell, so ...
 
     Tree access_tree;
-    SimplicialComplex< D > simplicial_decomposition;
+    MortonSimplicialComplex< D, _M > simplicial_decomposition;
     Vector e[D]; //basis
 
 };
