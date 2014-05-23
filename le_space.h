@@ -1148,36 +1148,29 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     struct Vertex: MortonSimplex< 0, _M >
     {
         enum { k = 1, d = D};
+        /*
         inline PValueType operator [](ptrdiff_t n) { 
             return Metric::morton_decode(this->v)[n];
         }
+        */
+        //todo: check performance differences (PValueType vs. Scalar)
+        inline Scalar operator [] (ptrdiff_t n) {
+            Scalar s;
+            s.v[0] = Metric::morton_decode(this->v)[n];
+            return s;
+        }
         Vertex()
         {
-            //for(ptrdiff_t i = 0; i < D; i++) v[i] = 0;
         }
         Vertex( std::initializer_list< Scalar > val)
         {
-            ptrdiff_t i = 0;
-          //  for(auto v : val) v[i++] = v;
         }
         Vertex(const Vertex& p)
         {
-            /*
-            for(ptrdiff_t i = 0; i < D; i++)
-            {
-                v[i] = p.v[i];
-            }
-            */
             this->v = p.v;
         }
         inline Vertex& operator = (const Vertex& p)
         {
-            /*
-            for(ptrdiff_t i = 0; i < D; i++)
-            {
-                v[i] = p.v[i];
-            }
-            */
             this->v = p.v;
             return *this;
         }

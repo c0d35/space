@@ -1,5 +1,5 @@
 
-CPP	=	g++ -O3  -std=c++11 -fexceptions
+CPP	=	clang -O3  -std=c++11 -fexceptions
 INCPATH  =
 LIBPATH = 
 SYSLIBS = 	-lstdc++ -lpthread
