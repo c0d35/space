@@ -233,8 +233,8 @@ template< int _D, class _SC > struct ContainerFiller
     static inline void fill(_SC& s)
     {
         typedef AbstractSimplex< _D - 1, LinkType::Single, 
-                AccessScheme::Index, _SC::template _Containment,
-                _SC::template _Allocator,
+                AccessScheme::Index, _SC::template Containment,
+                _SC::template Allocator,
                 typename _SC::template Space< _D - 1 > > AbstractSimplexT;
         typedef typename _SC::_Trait::template 
             SimplexT< _D, AbstractSimplexT > Simplex;
@@ -268,17 +268,22 @@ template< class _IT, class _SC > struct IterFiller< 0, _IT, _SC >{
 
 template< int _Dim,
     template< class U , class V > class _Containment,
-    template< class U > class _Allocator, class _Space> 
+    template< class U > class _Allocator, template< int __Dim > class _Space> 
     class AbstractSimplicialComplex< _Dim,
     LinkType::Single, AccessScheme::Index,
-    _Containment, _Allocator, _Space >
+    _Containment, _Allocator, _Space< _Dim > >
 {
     public:
         enum { d = _Dim,};
-
+        template< class U, class V >
+            using Containment = _Containment< U, V >;
+        template< class U >
+            using Allocator = _Allocator< U >;
+        template< int D >
+        using Space = _Space< D >;
         AbstractSimplicialComplex()
         {
-            ContainerFiller< _Dim, AbstractSimplicialComplex >::fill(this);
+            ContainerFiller< _Dim, AbstractSimplicialComplex >::fill(*this);
         }
         ~AbstractSimplicialComplex()
         {
@@ -1192,12 +1197,23 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     }
     inline Iterator insert(PointT &p)
     {
+        access_tree.insert(Metric::morton_encode(p));
     }
     Tree access_tree;
     MortonSimplicialComplex< D, _M > simplicial_decomposition;
     Vector e[D]; //basis
 
 };
+template< int D >
+using EuklidianSpaceCompressedFint16 = LinearSpaceCompressed< D,
+      SimpleEuklidianMetricFint16 >;
+template< int D >
+using EuklidianSpaceCompressedFint32 = LinearSpaceCompressed< D,
+      SimpleEuklidianMetricFint32 >;
+template< int D >
+using EuklidianSpaceCompressedFint64 = LinearSpaceCompressed< D,
+      SimpleEuklidianMetricFdouble >;
+
 
 // vector <-> polynome / functional / function
 //todo AS <-> multivectors/pseudoscalar (wedge product &
