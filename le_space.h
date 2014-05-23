@@ -750,6 +750,19 @@ template< int D >
 using SimpleEuklidianSpaceFdouble = LinearSpace< D,
       SimpleEuklidianMetricFdouble >;
 
+//specialise the simplices for euklidian spaces
+/*
+template< int D, class M > using Simplex = AbstractSimplex< D, LinkType::Single,
+    AccessScheme::Index, std::vector, std::allocator,
+    EuklidianSpace< D, M > >;
+template< int D, class M > using SimplicialComplex =
+AbstractSimplicialComplex< D, LinkType::Single, AccessScheme::Index,
+    std::vector, std::allocator, EuklidianSpace< D, M > >;
+template< int D, class M > using SimplicialComplexTopologyTrait =
+AbstractSimplicialComplexTopologyTrait < SimplicialComplex< D, M > >;
+template< int D, class M > using SimplicialComplexIterator = AbstractSimplicialComplexIterator< SimplicialComplex< D, M > >;
+*/
+
 
 template< int K, int D, class S > struct ExteriorPower: QuotientSpace< K, D >
 {
@@ -1068,10 +1081,34 @@ template< int D, int M,
 
 };
 
-template < int D, template < int _D > class M >
+
+
+template < int D, template< int _D > class M >
 struct MortonSpace: public TopologicalSpace< D >
 {
 };
+
+template < template< int D > class M > struct MortonSpace< 0, M >
+{
+    typename M< 0 >::KeyType v;
+
+};
+
+//specialise the simplices for morton space
+template< int D, template< int _D > class M > using MortonSimplex =
+AbstractSimplex< D, LinkType::Single, AccessScheme::Index,
+    std::vector, std::allocator, MortonSpace< D, M > >;
+template< int D, template< int _D > class M > using MortonSimplicialComplex =
+AbstractSimplicialComplex< D, LinkType::Single, AccessScheme::Index,
+    std::vector, std::allocator, MortonSpace< D, M > >;
+template< int D, template< int _D > class M > using
+MortonSimplicialComplexTopologyTrait = AbstractSimplicialComplexTopologyTrait<
+MortonSimplicialComplex< D, M > >;
+template< int D, template< int _D > class M  > using
+MortonSimplicialComplexIterator = AbstractSimplicialComplexIterator<
+MortonSimplicialComplex< D, M > >;
+
+
 
 template < int D, template< int _D > class _M >
 struct LinearSpaceCompressed: public MetricSpace< D, _M >
