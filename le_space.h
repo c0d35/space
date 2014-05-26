@@ -838,6 +838,7 @@ template< int D, int M,
 {
     public:
         typedef Space< D > MetricTraitT;
+        typedef Space< D > SpaceT;
         typedef typename MetricTraitT::ValueType ValueType;
         typedef typename MetricTraitT::KeyType KeyType;
         typedef typename MetricTraitT::Vector PointT;
@@ -856,7 +857,7 @@ template< int D, int M,
             hypercubes[0].push_back(cube);
             counter[0] = 1;
         }
-        struct HyperCube
+        struct HyperCube: SpaceT::Vector
         {
             public:
                 typename IntegerChooser< 
@@ -867,6 +868,7 @@ template< int D, int M,
                 int childs[numofchilds];
                 bool isleaf;
                 KeyType key;
+                //typename SpaceT::Vector key;
                 int level;
                 int weight;
                 int age;
@@ -1051,6 +1053,23 @@ template< int D, int M,
 
             return true;
 
+        }
+
+        inline ptrdiff_t* getkNN(int k, const KeyType key)
+        {
+            ptrdiff_t NN[k];
+            HyperCube *hypercubep = &hypercubes[0][0];
+            for(int i = 1; i < numofsubkeys; i++)
+            {
+                int subkey = (numofchilds - 1) &
+                    (key >> ((numoflevels - i) * (D + M)));
+                int next = hypercubep->childs[subkey];
+                if(next == -1) break;
+                hypercubep = &hypercubes[i][next];
+
+
+            }
+            return NN;
         }
 
         inline int insert(const KeyType k)
