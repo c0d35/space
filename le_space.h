@@ -1268,7 +1268,7 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     //inline Iterator insert(PointT &p)
     inline KeyType insert(KeyType k)
     {
-        return access_tree.insert(k);
+        return access_tree.insert(k, -1);
     }
     inline KeyType insert(PointT &p)
     {
@@ -1277,6 +1277,9 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         k = Metric::morton_encode(p);
         v.v = k;
 
+        //getkNN() -> get 1-Ring for each NN
+        //-> intersection of all 1-Ring
+        //-> proj. space
         //access_tree.insert(
 
         return v.v;
