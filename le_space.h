@@ -281,6 +281,11 @@ template< int _Dim,
             using Allocator = _Allocator< U >;
         template< int D >
         using Space = _Space< D >;
+        template< int D >
+          using Simplex = AbstractSimplex< D, LinkType::Single,
+                 AccessScheme::Index, _Containment,
+                 _Allocator, Space < D > >;
+  
         AbstractSimplicialComplex()
         {
             ContainerFiller< _Dim, AbstractSimplicialComplex >::fill(*this);
@@ -321,6 +326,14 @@ AbstractSimplicialComplex< _Dim, _LType,
         {
             return IterFuncT::isvalid(*this);
         }
+        template < int D >
+            inline AbstractSimplicialComplexIterator& 
+            insert(typename ASCTopoT::template Simplex< D > &s)
+            {
+                ASCTopoT::template insert<D,
+                AbstractSimplicialComplexIterator >::doit(this, s);	
+                return *this;
+            }
         template < int _D >
             inline AbstractSimplicialComplexIterator& simplexCCW()
             {
@@ -401,6 +414,36 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
                     return succ;
                 }
             };
+        template< int _D, class _It >
+            struct insert
+            {
+                inline bool doit(IterT &iter, 
+                        typename ASCT::template Simplex< _D > s)
+                {
+                    /*
+                    bool succ;
+                    int inv = simd_sum< int,
+                        _D >::eval(iter.m_sh->simplex_containers[_D - 1]
+                                [iter.simplicesindices[_D - 1]].vertices);
+                    IterT start, run;
+                    start = iter;
+                    iter.simplicesindices[ _D - 1] = 
+                        iter.m_sd->simplex_containers[_D]
+                        [iter.simplicesindices[_D]].lower[_D - 1];
+
+                    do{
+
+                        simplexCCW< _D - 1, _It >::doit(iter);
+
+                    }while( simd_sum< int, _D >::eval(
+                                run.spimplicesindices[_D - 1].vertices) != inv);
+                    simplexAlign< _D - 1, _It >::doit(iter);
+                    */
+                    return true;
+
+                }
+            };
+
 
         template< int _D, class _It >
             struct simplexAlign
@@ -1072,7 +1115,7 @@ template< int D, int M,
             return NN;
         }
 
-        inline int insert(const KeyType k)
+        inline int insert(const KeyType k, const ptrdiff_t id)
         {
             PointT p_b;
 
@@ -1112,6 +1155,8 @@ template< int D, int M,
             }
 
             hypercubes[numoflevels - 1][next].isleaf = true;
+            hypercubes[numoflevels - 1][next].vertex_id = id;
+
             return pos;
         }
 
@@ -1195,6 +1240,10 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         Vertex( std::initializer_list< Scalar > val)
         {
         }
+        Vertex(const PointT &p)
+        {
+            this->v = Metric::morton_encode(p);
+        }
         Vertex(const Vertex& p)
         {
             this->v = p.v;
@@ -1223,14 +1272,21 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     }
     inline KeyType insert(PointT &p)
     {
-        return access_tree.insert(Metric::morton_encode(p));
+        KeyType k;
+        Vertex v;
+        k = Metric::morton_encode(p);
+        v.v = k;
+
+        //access_tree.insert(
+
+        return v.v;
     }
     inline void clear()
     {
         access_tree.clear();
     }
     Tree access_tree;
-    MortonSimplicialComplex< D, _M > simplicial_decomposition;
+    MortonSimplicialComplex< D, _M > simplicial_complex;
     Vector e[D]; //basis
 
 };
