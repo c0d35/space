@@ -232,6 +232,7 @@ template< int _D, class _SC > struct ContainerFiller
 { 
     static inline void fill(_SC& s)
     {
+        /*
         typedef AbstractSimplex< _D - 1, LinkType::Single, 
                 AccessScheme::Index, _SC::template Containment,
                 _SC::template Allocator,
@@ -242,12 +243,19 @@ template< int _D, class _SC > struct ContainerFiller
             _Containment< Simplex, 
             _SC::template _Allocator< Simplex > > Simplices;
         s.simplex_containers[_D - 1] = new Simplices;
+        */
+        /*typedef AbstractSimplex< _D, LinkType::Single, 
+                AccessScheme::Index, _SC::template Containment,
+                _SC::template Allocator, typename _SC::template Space< _D > > Simplex;*/
+        s.simplex_containers[_D] = new typename _SC::template Containment<
+            _SC::template Simplex< _D >, _SC::template Allocator< 
+            _SC::template Simplex< _D > > >;
         ContainerFiller< _D - 1, _SC >::fill(s);
     };	
 };
 
 template< class _SC > 
-struct ContainerFiller< 0, _SC >{ static inline void fill(_SC&){}};
+struct ContainerFiller< -1, _SC >{ static inline void fill(_SC&){}};
 
 template< int _D, class _IT, class  _SC > struct IterFiller
 {
