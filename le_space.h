@@ -248,8 +248,8 @@ template< int _D, class _SC > struct ContainerFiller
                 AccessScheme::Index, _SC::template Containment,
                 _SC::template Allocator, typename _SC::template Space< _D > > Simplex;*/
         s.simplex_containers[_D] = new typename _SC::template Containment<
-            _SC::template Simplex< _D >, _SC::template Allocator< 
-            _SC::template Simplex< _D > > >;
+            typename _SC::template Simplex< _D >, typename _SC::template Allocator< 
+            typename _SC::template Simplex< _D > > >;
         ContainerFiller< _D - 1, _SC >::fill(s);
     };	
 };
@@ -296,7 +296,7 @@ template< int _Dim,
   
         AbstractSimplicialComplex()
         {
-            //ContainerFiller< _Dim, AbstractSimplicialComplex >::fill(*this);
+            ContainerFiller< _Dim, AbstractSimplicialComplex >::fill(*this);
         }
         ~AbstractSimplicialComplex()
         {
