@@ -288,7 +288,7 @@ template< int _Dim,
   
         AbstractSimplicialComplex()
         {
-            ContainerFiller< _Dim, AbstractSimplicialComplex >::fill(*this);
+            //ContainerFiller< _Dim, AbstractSimplicialComplex >::fill(*this);
         }
         ~AbstractSimplicialComplex()
         {
@@ -296,6 +296,7 @@ template< int _Dim,
 
         }
         void* simplex_containers[_Dim];
+        int bla;
 };
 template< int _Dim, LinkType _LType, AccessScheme _AScheme,
     template< class U , class V > class _Containment,
@@ -538,6 +539,7 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
 
 
 #include <vector>
+#include <map>
 
 //specialise the simplices for proper spaces
 template< int D > using Simplex = AbstractSimplex< D, LinkType::Single,
@@ -700,7 +702,7 @@ struct EuklidianMetric
     typedef typename IntegerChooser< D * sizeof(ValueType) >::IntegerType 
         KeyType;
     typedef Point Vector;
-    static inline Vector dist(Point p0, Point p1)
+    static inline Vector distance(Point p0, Point p1)
     {
         Vector d;
         for(ptrdiff_t i = 0; i < D; i++)d[i] = p1[i] - p0[i];
@@ -1098,9 +1100,9 @@ template< int D, int M,
 
         }
 
-        inline ptrdiff_t* getkNN(int k, const KeyType key)
+        inline ptrdiff_t* getkNN(int k, const KeyType key, ptrdiff_t *NN)
         {
-            ptrdiff_t NN[k];
+            //ptrdiff_t NN[k];
             HyperCube *hypercubep = &hypercubes[0][0];
             for(int i = 1; i < numofsubkeys; i++)
             {
@@ -1220,9 +1222,10 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     {
     };
     */
-    struct Vertex: MortonSimplex< 0, _M >
+    struct Vertex: Simplex< 0 >
     {
         enum { k = 1, d = D};
+        KeyType v;
         /*
         inline PValueType operator [](ptrdiff_t n) { 
             return Metric::morton_decode(this->v)[n];
@@ -1277,6 +1280,17 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         k = Metric::morton_encode(p);
         v.v = k;
 
+        ptrdiff_t NN[D * 3];
+        access_tree.getkNN(D * 3, k, NN);
+        
+        std::map< KeyType, ptrdiff_t > m;
+
+        for(int i = 0; i++; i < D * 3)
+        {
+           // m.insert(make_pair(simplicial_complex.simplex_containers[0][i], NN[i]));
+            std::cout << simplicial_complex.bla;
+        }
+
         //getkNN() -> get 1-Ring for each NN
         //-> intersection of all 1-Ring
         //-> proj. space
@@ -1288,8 +1302,8 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     {
         access_tree.clear();
     }
-    Tree access_tree;
-    MortonSimplicialComplex< D, _M > simplicial_complex;
+    Tree access_tree; //access tree for 0-simplices
+    SimplicialComplex< D > simplicial_complex;
     Vector e[D]; //basis
 
 };
