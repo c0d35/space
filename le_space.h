@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 //some helpers, rewrite them with constexpr
 
 template< bool _cond, class _then, class _else >
@@ -120,13 +121,13 @@ template< > struct IntegerChooser< 4 >
 template< > struct IntegerChooser< 6 >
 {
 	enum { size = 6};
-	typedef __attribute__ ((aligned (1))) uint64_t IntegerType;
+    typedef __attribute__ ((aligned (8))) uint64_t IntegerType;
 };
 
 template< > struct IntegerChooser< 8 >
 {
 	enum { size = 8};
-	typedef __attribute__ ((aligned (32))) uint64_t IntegerType;
+	typedef __attribute__ ((aligned (8))) uint64_t IntegerType;
 };
 
 
@@ -160,7 +161,7 @@ template< int N > struct Algebra {};
 template< int N > struct GradedAlgebra {};
 template< int K, int N > struct QuotientSpace {};
 template< int _Dim >
-struct Set {};
+struct Set { enum { d = _Dim }; };
 template< int _Dim >
 struct TopologicalSpace: Set< _Dim > {};
 template< int _Dim >
@@ -293,6 +294,9 @@ template< int _Dim,
           using Simplex = AbstractSimplex< D, LinkType::Single,
                  AccessScheme::Index, _Containment,
                  _Allocator, Space < D > >;
+        template< int D >
+            using Container = Containment< Simplex< D >, Allocator< Simplex< D > > >;
+
   
         AbstractSimplicialComplex()
         {
@@ -303,6 +307,22 @@ template< int _Dim,
             for(int i = 0; i < _Dim; i++) delete simplex_containers[i];
 
         }
+        
+        /*
+        template < int D >
+        static  Container< D >& getContainer(int i = D)
+            {
+                return *((Container< D > *)simplex_containers[D]);
+            }
+         */
+        void* operator [] (int i)
+        {
+            //Container< i > C;
+            return simplex_containers[i];
+            //return *((Container< i > *) simplex_containers[D]);
+            //return new F;
+        }
+        
         void* simplex_containers[_Dim];
         int bla;
 };
@@ -551,12 +571,12 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
 
 //specialise the simplices for proper spaces
 template< int D > using Simplex = AbstractSimplex< D, LinkType::Single,
-    AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< D > >;
+    AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< D + 1 > >;
 template< int D > using SimplicialComplex = AbstractSimplicialComplex< D,
     LinkType::Single, AccessScheme::Index, std::vector, std::allocator,
-    TopologicalSpace< D > >;
+    TopologicalSpace< D + 1 > >;
 template< int D > using SimplicialComplexTopologyTrait =
-AbstractSimplicialComplexTopologyTrait < SimplicialComplex< D > >;
+AbstractSimplicialComplexTopologyTrait < SimplicialComplex< D + 1 > >;
 template< int D > using SimplicialComplexIterator = AbstractSimplicialComplexIterator< SimplicialComplex< D > >;
 
 
@@ -1295,8 +1315,14 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
 
         for(int i = 0; i++; i < D * 3)
         {
-           // m.insert(make_pair(simplicial_complex.simplex_containers[0][i], NN[i]));
-            std::cout << simplicial_complex.bla;
+
+           // std::cout << (simplicial_complex.getContainer<0>(0))[i].v;//[i].v;
+            //typename SimplicialComplex< D >::Container< 0 > c;
+          //  std::cout << (*((typename SimplicialComplex< D >::template Container< 0 > *)
+          //      simplicial_complex.simplex_containers[0]))[i].v;
+          //  std::cout << simplicial_complex[i];
+            //m.insert(make_pair(((SimplicialComplex::Container<0> *)(simplicial_complex[0]))[i].v, NN[i]));
+          //  std::cout << simplicial_complex.bla;
         }
 
         //getkNN() -> get 1-Ring for each NN

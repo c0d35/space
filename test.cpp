@@ -20,5 +20,7 @@ int main()
     std::cout << "nchoosek< 6, 3 >::eval = " << nchoosek< 6, 3 >::eval << std::endl;
     std::cout << "ipow< 2, 10 >::eval = " << ipow< 2, 10 >::eval << std::endl;
     std::cout << "ifact< 6 >::eval = " << ifact< 6 >::eval << std::endl;
+    //std::cout << "space.simplicial_complex[1] = " << space.simplicial_complex[
+    //    (SimplicialComplex<3>::Simplex<1>::d)] << std::endl;
 	return 0;
 }
