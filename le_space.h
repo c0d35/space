@@ -1215,10 +1215,10 @@ template < template< int D > class M > struct MortonSpace< 1, M >
 //specialise the simplices for morton space
 template< int D, template< int _D > class M > using MortonSimplex =
 AbstractSimplex< D, LinkType::Single, AccessScheme::Index,
-    std::vector, std::allocator, MortonSpace< D, M > >;
+    std::vector, std::allocator, MortonSpace< D + 1, M > >;
 template< int D, template< int _D > class M > using MortonSimplicialComplex =
 AbstractSimplicialComplex< D, LinkType::Single, AccessScheme::Index,
-    std::vector, std::allocator, MortonSpace< D, M > >;
+    std::vector, std::allocator, MortonSpace< D + 1, M > >;
 template< int D, template< int _D > class M > using
 MortonSimplicialComplexTopologyTrait = AbstractSimplicialComplexTopologyTrait<
 MortonSimplicialComplex< D, M > >;
