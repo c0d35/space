@@ -1206,7 +1206,7 @@ struct MortonSpace: public TopologicalSpace< D >
 {
 };
 
-template < template< int D > class M > struct MortonSpace< 0, M >
+template < template< int D > class M > struct MortonSpace< 1, M >
 {
     typename M< 0 >::KeyType v;
     //uint64_t v;
@@ -1226,6 +1226,15 @@ template< int D, template< int _D > class M  > using
 MortonSimplicialComplexIterator = AbstractSimplicialComplexIterator<
 MortonSimplicialComplex< D, M > >;
 
+template < int D >
+struct CompressedMetricalSpace: public TopologicalSpace< D >
+{
+    enum { d = D };
+};
+
+
+
+
 
 
 template < int D, template< int _D > class _M >
@@ -1244,13 +1253,15 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     typedef typename ExteriorPower< 0, 0, LinearSpaceCompressed>::Vector
         Scalar;
 
+
+
     typedef MortonSimplicialComplexIterator< d, _M > Iterator;
     /*
     struct Iterator: MortonSimplicialComplexIterator < d, _M>
     {
     };
     */
-    struct Vertex: Simplex< 0 >
+    struct Vertex: MortonSimplex< 0, _M >
     {
         enum { k = 1, d = D};
         KeyType v;
@@ -1337,7 +1348,7 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         access_tree.clear();
     }
     Tree access_tree; //access tree for 0-simplices
-    SimplicialComplex< D > simplicial_complex;
+    MortonSimplicialComplex< D, _M > simplicial_complex;
     Vector e[D]; //basis
 
 };
