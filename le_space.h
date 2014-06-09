@@ -811,7 +811,6 @@ struct MorphismTrait
 
 template < ArchType a, int D, typename Type > struct EuklidianMetricTrait { };
 
-
 template< int D > using SimplePointFdouble = SimplePoint< D, double >;
 template< int D > using SimplePointFuint16 = SimplePoint< D, uint16_t >;
 template< int D > using SimplePointFuint32 = SimplePoint< D, uint32_t >;
@@ -1035,7 +1034,7 @@ template< int D, int M,
         typedef typename Containment< HyperCube,
                 Allocator< HyperCube > >::difference_type diff_type;
         typedef Containment< diff_type, Allocator< diff_type > > Indices;
-        inline Indices getAdjacencies(const PointT &p, int level)
+        inline Indices getAdjacencies(const KeyType key, int level)
         {
 
             //generate vectors to add
@@ -1051,9 +1050,14 @@ template< int D, int M,
 
             }
             Indices l_surrounding;
-            KeyType key;
+            //std::stack< int > down;
+            //KeyType key;
+            KeyType b[D]; //base
+            KeyType zero =  key & (~(ipow<2, (sizeof(KeyType) * 8 / D) - level>::eval - 1));
+            for(int i = 0; i < D; i++) b[i] = 0b1 << ((((sizeof(KeyType) * 8 / D) - level) * D)  - i);
             KeyType key_back;
-            key = MetricTraitT::morton_encode(p);
+            //key = MetricTraitT::morton_encode(p);
+           // for(int i = 0; i < D; i++) l_mortonbase[i] = MetricTraitT::morton_encode(l_basevec[i]); 
             key_back = key;
             int i;
 
@@ -1062,21 +1066,28 @@ template< int D, int M,
             int pos, next, prev;
             unsigned int subkey;
 
-            for(i = 1;i < level; i++)
+            for(int i = 0; i < ipow< 3, D >::eval; i++)
             {
-                subkey = (numofchilds - 1) & (key >> ((numoflevels - i)
-                            * (D + M)));
-                prev = next;
-                next = hypercuberef->childs[subkey];
-                if(next == -1)
+
+
+                for(i = 1;i < level; i++)
                 {
-                    return l_surrounding;
+                    subkey = (numofchilds - 1) & (key >> ((numoflevels - i)
+                                * (D + M)));
+                    prev = next;
+                    next = hypercuberef->childs[subkey];
+                    if(next == -1)
+                    {
+                        return l_surrounding;
+                    }
+                    hypercuberef = &(hypercubes[i][next]);
                 }
-                hypercuberef = &(hypercubes[i][next]);
+
+                HyperCube *parent = &(hypercubes[i][prev]);
+                l_surrounding.push_back(next);
+
             }
 
-            HyperCube *parent = &(hypercubes[i][prev]);
-            l_surrounding.push_back(next);
 
         }
 
@@ -1206,10 +1217,10 @@ struct MortonSpace: public TopologicalSpace< D >
 {
 };
 
-template < template< int D > class M > struct MortonSpace< 1, M >
+template < template< int D > class M >
+struct MortonSpace< 1, M >: public TopologicalSpace< 1 >
 {
     typename M< 0 >::KeyType v;
-    //uint64_t v;
 };
 
 //specialise the simplices for morton space
@@ -1324,7 +1335,7 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         
         std::map< KeyType, ptrdiff_t > m;
 
-        for(int i = 0; i++; i < D * 3)
+        //for(int i = 0; i++; i < D * 3)
         {
 
            // std::cout << (simplicial_complex.getContainer<0>(0))[i].v;//[i].v;
@@ -1348,7 +1359,8 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         access_tree.clear();
     }
     Tree access_tree; //access tree for 0-simplices
-    MortonSimplicialComplex< D, _M > simplicial_complex;
+    MortonSimplicialComplex< D, _M > simplicial_complex; //replace
+    //std-containers with proper trees with metrical traits
     Vector e[D]; //basis
 
 };
