@@ -1053,11 +1053,16 @@ template< int D, int M,
             //std::stack< int > down;
             //KeyType key;
             KeyType b[D]; //base
-            KeyType zero =  key & (~(ipow<2, (sizeof(KeyType) * 8 / D) - level>::eval - 1));
-            for(int i = 0; i < D; i++) b[i] = 0b1 << ((((sizeof(KeyType) * 8 / D) - level) * D)  - i);
+            KeyType zero =  key & (~(ipow<2,
+                        (sizeof(KeyType) * 8 / D) - level>::eval - 1));
+            for(int i = 0; i < D; i++) b[i] = 0b1 << 
+                ((((sizeof(KeyType) * 8 / D) - level) * D)  - i);
+            //to do: snaking
+            //using point symmetry to mask out distance 2
             KeyType key_back;
             //key = MetricTraitT::morton_encode(p);
-           // for(int i = 0; i < D; i++) l_mortonbase[i] = MetricTraitT::morton_encode(l_basevec[i]); 
+           // for(int i = 0; i < D; i++) l_mortonbase[i] = 
+           // MetricTraitT::morton_encode(l_basevec[i]); 
             key_back = key;
             int i;
 
@@ -1066,7 +1071,13 @@ template< int D, int M,
             int pos, next, prev;
             unsigned int subkey;
 
-            for(int i = 0; i < ipow< 3, D >::eval; i++)
+            //for(int i = 0; i < ipow< 3, D >::eval; i++)
+            KeyType neighbourhood[ipow< ipow< 2, 2 >::eval, D >::eval];
+            for(int i = 0; i < ipow< ipow< 2, 2 >::eval, D >::eval; i++)
+                //\f$ 2^n-tree level distance d 
+                //{2^d}^n
+                //mask out distance 2 within
+                //p = \infty
             {
 
 
