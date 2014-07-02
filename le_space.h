@@ -184,6 +184,7 @@ template< int _Dim, LinkType _LType, AccessScheme _AScheme,
     template< class U > class _Allocator, class _Space >
     struct AbstractSimplex: _Space {};
 
+
 ///why d + 1 you may ask. 'cause \f$ {d+1 \choose d} = d+1\f$ , u kno'. 
 //thus we're terminating the recursion at dimension = -1
 template< int _Dim,  template< class U, class V > class _Containment,
@@ -764,9 +765,12 @@ struct EuklidianMetric
         Point p;
         for(int i = 0; i < (sizeof(KeyType) * 8); i++)
         {
-                p[(i + d - 1) % d] <<= 1;
-                p[(i + d - 1) % d] |= (pre_key >>
+                p[(i) % d] <<= 1;
+                p[(i) % d] |= (pre_key >>
                         ((sizeof(KeyType) * 8) - 1))  & mask;
+                //p[(i + d - 1) % d] <<= 1;
+                //p[(i + d - 1) % d] |= (pre_key >>
+                //        ((sizeof(KeyType) * 8) - 1))  & mask;
                 pre_key <<= 1;
         }
         return p;
@@ -902,6 +906,35 @@ struct ExteriorAlgebra: GradedAlgebra< D >
  * begin LP-Tree Stuff
  *
  */
+/**
+ * Hyper Cube foo
+ */
+
+template< int _Dim, LinkType _LType, AccessScheme _AScheme,  
+    template< class U, class V > class _Containment,
+    template< class U > class _Allocator, class _Space >
+    struct AbstractHyperCube: _Space {};
+
+template< int _Dim,  template< class U, class V > class _Containment,
+    template< class U > class _Allocator, template < int D > class _Space >
+    struct AbstractHyperCube< _Dim, LinkType::Single, AccessScheme::Index,
+    _Containment, _Allocator, _Space< _Dim > >: _Space < _Dim >
+{
+    enum {d = _Dim};
+    ptrdiff_t upper, opponent, next;
+    ptrdiff_t lower[_Dim * 2]; 
+};
+///terminate the recursion in the empty simplex (simplicial set) with
+//dimension -1
+template< template< class U, class V > class _Containment, 
+    template< class U > class _Allocator, 
+    template < int D > class _Space >
+    struct AbstractHyperCube< -1, LinkType::Single,
+    AccessScheme::Index, _Containment,
+    _Allocator, _Space< -1 > >: _Space< -1 >
+{
+    enum { d = -1, };
+};
 
 template< int D, int M,
     template< int __D > class Space, template< class U, class V >
@@ -1034,7 +1067,8 @@ template< int D, int M,
         typedef typename Containment< HyperCube,
                 Allocator< HyperCube > >::difference_type diff_type;
         typedef Containment< diff_type, Allocator< diff_type > > Indices;
-        inline Indices getAdjacencies(const KeyType key, int level)
+        typedef Containment< KeyType, Allocator< KeyType > > Keys;
+        inline Keys getAdjacencies(const KeyType key, int level)
         {
 
             //generate vectors to add
@@ -1049,12 +1083,12 @@ template< int D, int M,
             {
 
             }
-            Indices l_surrounding;
+            Keys l_surrounding;
             //std::stack< int > down;
             //KeyType key;
             KeyType b[D]; //base
-            KeyType zero =  key & (~(ipow<2,
-                        (sizeof(KeyType) * 8 / D) - level>::eval - 1));
+            //KeyType zero =  key & (~(ipow<2,
+            //            (sizeof(KeyType) * 8 / D) - level>::eval - 1));
             for(int i = 0; i < D; i++) b[i] = 0b1 << 
                 ((((sizeof(KeyType) * 8 / D) - level) * D)  - i);
             //to do: snaking
@@ -1071,34 +1105,69 @@ template< int D, int M,
             int pos, next, prev;
             unsigned int subkey;
 
+            
             //for(int i = 0; i < ipow< 3, D >::eval; i++)
+            //O'Rourke, "Computing Relative Neighborhood graph in the L_1
+            //and L_\infty metrics," Pattern Recognition, 1982. 
+            //
             KeyType neighbourhood[ipow< ipow< 2, 2 >::eval, D >::eval];
-            for(int i = 0; i < ipow< ipow< 2, 2 >::eval, D >::eval; i++)
+            //KeyType sampler[ipow< 3, D >::eval - 1];
+            int po[D][2];
+            PointT p = MetricTraitT::morton_decode(key);
+            PointT n;
+            Keys samplers;
+            //L_1
+            for(int i = 0; i < (D); i++)
+            {
+
+                ValueType o = 0x1 << ( sizeof(l_basevec[i]) * 8 - level - 1);
+                n = p;
+                n[i] += o;
+                samplers.push_back(MetricTraitT::morton_encode(n));
+                n = p;
+                n[i] -= o;
+                samplers.push_back(MetricTraitT::morton_encode(n));
+                po[i][0] = -o;
+                po[i][1] = o;
+            }
+            ////L_\infty
+            for(int i = 0; i < ipow< 2, D >::eval; i++)
+            {
+                n = p;
+                for(int j = 0; j < D; j++) n[j] += po[j][i & (0x1 << j)];
+                samplers.push_back(MetricTraitT::morton_encode(n));
+            }
+            return samplers;
+            //for(int i = 0; i < ipow< ipow< 2, 2 >::eval, D >::eval; i++)
+            //for(int i = 0; i < ipow< 3, D >::eval - 1; i++)
+            for(int j = 0; i < ipow< 2, D >::eval + D; j++)
                 //\f$ 2^n-tree level distance d 
                 //{2^d}^n
                 //mask out distance 2 within
                 //p = \infty
             {
-
+                KeyType l_key = samplers[i];
 
                 for(i = 1;i < level; i++)
                 {
-                    subkey = (numofchilds - 1) & (key >> ((numoflevels - i)
+                    subkey = (numofchilds - 1) & (l_key >> ((numoflevels - i)
                                 * (D + M)));
                     prev = next;
                     next = hypercuberef->childs[subkey];
                     if(next == -1)
                     {
-                        return l_surrounding;
+                        break;
+                        //return l_surrounding;
                     }
                     hypercuberef = &(hypercubes[i][next]);
                 }
 
                 HyperCube *parent = &(hypercubes[i][prev]);
-                l_surrounding.push_back(next);
+                l_surrounding.push_back(l_key);
 
             }
 
+            return l_surrounding;
 
         }
 
