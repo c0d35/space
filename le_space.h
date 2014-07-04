@@ -1141,7 +1141,8 @@ template< int D, int M,
             for(int i = 0; i < (D); i++)
             {
 
-                ValueType o = 0x1 << (((sizeof(KeyType) * 8 ) / D) - (level - 1) );
+                ValueType o = 0x1 << (((sizeof(KeyType) * 8 ) / D) 
+                        - (level - 1) );
                 //ValueType o = 0x1 << ( sizeof(l_basevec[i]) * 8 - level - 1);
                 n = p;
                 n[i] += o;
@@ -1155,7 +1156,8 @@ template< int D, int M,
             for(int i = 0; i < ipow< 2, D >::eval; i++)
             {
                 n = p;
-                for(int j = 0; j < D; j++) n[j] += po[j][i & (0x1 << j) ? 1 : 0];
+                for(int j = 0; j < D; j++)
+                    n[j] += po[j][i & (0x1 << j) ? 1 : 0];
                 samplers.push_back(MetricTraitT::morton_encode(n));
             }
             //return samplers;
