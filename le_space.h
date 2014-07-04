@@ -950,7 +950,7 @@ template< int D, int M,
         enum {
             d = D, alex_dimension = M,
             numofsubkeys = (sizeof(ValueType) * 8) * D / (D + M), 
-            numoflevels = (sizeof(ValueType) * 8),
+            numoflevels = (sizeof(KeyType) * 8 / D), //(sizeof(ValueType) * 8),
             numofchilds = ipow< 2, d + alex_dimension >::eval,
             numofneighbours = ipow< 3, D >::eval - 1 };
         HyperCubeTree()
@@ -1019,7 +1019,7 @@ template< int D, int M,
                     }
                     level = _level;
                     key = k;
-                    p = _p;
+                    p = _p;https://www.manufactum.de/Authentication.html?redirect=IhrManufactumHome.html
                     weight = 0;
 
                 }
@@ -1068,6 +1068,26 @@ template< int D, int M,
                 Allocator< HyperCube > >::difference_type diff_type;
         typedef Containment< diff_type, Allocator< diff_type > > Indices;
         typedef Containment< KeyType, Allocator< KeyType > > Keys;
+        inline bool is(const KeyType key, int level)
+        {
+            HyperCube *hypercuberef = &hypercubes[0][0];
+            int next;
+            unsigned int subkey;
+
+                for(int i = 1;i < level; i++)
+                {
+                    subkey = (numofchilds - 1) &
+                        (key >> ((numoflevels - i) * D));
+                    next = hypercuberef->childs[subkey];
+                    if(next == -1)
+                    {
+                        return false;
+                    }
+                    hypercuberef = &(hypercubes[i][next]);
+                }
+                return true;
+        }
+
         inline Keys getAdjacencies(const KeyType key, int level)
         {
 
@@ -1116,11 +1136,13 @@ template< int D, int M,
             PointT p = MetricTraitT::morton_decode(key);
             PointT n;
             Keys samplers;
+            samplers.push_back(key);
             //L_1
             for(int i = 0; i < (D); i++)
             {
 
-                ValueType o = 0x1 << ( sizeof(l_basevec[i]) * 8 - level - 1);
+                ValueType o = 0x1 << (((sizeof(KeyType) * 8 ) / D) - (level - 1) );
+                //ValueType o = 0x1 << ( sizeof(l_basevec[i]) * 8 - level - 1);
                 n = p;
                 n[i] += o;
                 samplers.push_back(MetricTraitT::morton_encode(n));
@@ -1130,42 +1152,21 @@ template< int D, int M,
                 po[i][0] = -o;
                 po[i][1] = o;
             }
-            ////L_\infty
             for(int i = 0; i < ipow< 2, D >::eval; i++)
             {
                 n = p;
-                for(int j = 0; j < D; j++) n[j] += po[j][i & (0x1 << j)];
+                for(int j = 0; j < D; j++) n[j] += po[j][i & (0x1 << j) ? 1 : 0];
                 samplers.push_back(MetricTraitT::morton_encode(n));
             }
-            return samplers;
+            //return samplers;
             //for(int i = 0; i < ipow< ipow< 2, 2 >::eval, D >::eval; i++)
-            //for(int i = 0; i < ipow< 3, D >::eval - 1; i++)
-            for(int j = 0; i < ipow< 2, D >::eval + D; j++)
                 //\f$ 2^n-tree level distance d 
                 //{2^d}^n
                 //mask out distance 2 within
                 //p = \infty
-            {
-                KeyType l_key = samplers[i];
-
-                for(i = 1;i < level; i++)
-                {
-                    subkey = (numofchilds - 1) & (l_key >> ((numoflevels - i)
-                                * (D + M)));
-                    prev = next;
-                    next = hypercuberef->childs[subkey];
-                    if(next == -1)
-                    {
-                        break;
-                        //return l_surrounding;
-                    }
-                    hypercuberef = &(hypercubes[i][next]);
-                }
-
-                HyperCube *parent = &(hypercubes[i][prev]);
-                l_surrounding.push_back(l_key);
-
-            }
+            //for(int i = 0; i < ipow< 3, D >::eval - 1; i++)
+            for(KeyType sampler: samplers)
+                if(is(sampler, level)) l_surrounding.push_back(sampler);
 
             return l_surrounding;
 
@@ -1265,6 +1266,7 @@ template< int D, int M,
                         l_c.key = key_back;
                         l_c.level = i;
                         hypercubes[i].push_back(l_c);
+                        //pos = hypercubes[i].size() - 1;
                         hypercuberef->childs[subkey] = pos;
 
                         next = pos;
