@@ -264,19 +264,20 @@ struct ContainerFiller< 0, _SC >{ static inline void fill(_SC&){}};
 
 template< int _D, class _IT, class  _SC > struct IterFiller
 {
-    static inline void fill(_IT& i)
+    static inline void fill(_IT* i)
     {
-        typedef  AbstractSimplex< _D - 1, LinkType::Single,
+        typedef  AbstractSimplex< _D, LinkType::Single,
                  AccessScheme::Index, _SC::template Containment,
                  _SC::template Allocator, 
-                 typename _SC::Space > AbstractSimplexT;
-        i.iterdata[_D] = new AbstractSimplexT;
+                 typename _SC::Space > Simplex;
+        i->iterdata[_D ] = new Simplex;
+        //void* foo = new Simplex;
         IterFiller< _D - 1, _IT, _SC >::fill(i);
     }
 };
 
-template< class _IT, class _SC > struct IterFiller< 0, _IT, _SC >{
-    static inline void fill(_IT&){}
+template< class _IT, class _SC > struct IterFiller< -1, _IT, _SC >{
+    static inline void fill(_IT* i){}
 };
 
 template< int _Dim,
@@ -309,7 +310,7 @@ template< int _Dim,
         }
         ~AbstractSimplicialComplex()
         {
-            for(int i = 0; i < _Dim; i++) delete simplex_containers[i];
+            //for(int i = 0; i < _Dim; i++) delete simplex_containers[i];
 
         }
         
@@ -327,12 +328,14 @@ template< int _Dim,
 
 
         template < int D >
-        inline void insert( Simplex< D > s )
+        inline AbstractSimplicialComplexIterator < AbstractSimplicialComplex >
+        insert( Simplex< D > s )
         {
 
             AbstractSimplicialComplexIterator<AbstractSimplicialComplex>
                 iter(this);
-            iter.insert(s);
+            //iter.insert(s);
+            return iter;
 
         }
         inline void* operator [] (const int i)
@@ -364,21 +367,21 @@ AbstractSimplicialComplex< _Dim, _LType,
                  AccessScheme::Index, _Containment,
                  _Allocator, _Space >;
 
-        AbstractSimplicialComplexIterator(ASCT *sc)
+        AbstractSimplicialComplexIterator(ASCT* sc)
         {
             m_sd = sc;
             IterFiller< _Dim, AbstractSimplicialComplexIterator,
-                ASCT >::fill(*this);
+                ASCT >::fill(this);
         }
         AbstractSimplicialComplexIterator()
         {
             IterFiller< _Dim, AbstractSimplicialComplexIterator,
-                ASCT >::fill(*this);
+                ASCT >::fill(this);
         }
    
         ~AbstractSimplicialComplexIterator()
         {
-            for(int i = 0; i < _Dim; i++) delete iterdata[i];
+            //for(int i = 0; i < _Dim; i++) delete iterdata[i];
         }
 
         inline bool isvalid()
@@ -406,7 +409,7 @@ AbstractSimplicialComplex< _Dim, _LType,
             return simplicesindices[i];
         }
 
-        void*	    iterdata[_Dim];
+        void*	    iterdata[_Dim + 1];
         ptrdiff_t	simplicesindices[_Dim];
         ASCT	*m_sd;
 };
@@ -1442,17 +1445,17 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     inline KeyType insert(KeyType k)
     {
         
-        if(access_tree.is(k, 5)) return k;
-        access_tree.insert(k, -1);
+        //if(access_tree.is(k, Tree::numoflevels)) return k;
         typename Tree::Keys neighbours =
             access_tree.getAdjacencies(k, 5);
         //Iter(simplicial_complex;
         Vertex v;
         v.v = k;
         MortonSimplex< 0, _M > vv;
-        
-        simplicial_complex.insert(vv);
+        Iterator iter;
+        iter = simplicial_complex.insert(vv);
 
+        //access_tree.insert(k, -1);
 
         //check is()
         //if is() return;
