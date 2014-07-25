@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <array>
 //some helpers, rewrite them with constexpr
 
 template< bool _cond, class _then, class _else >
@@ -193,8 +194,26 @@ template< int _Dim,  template< class U, class V > class _Containment,
     _Containment, _Allocator, _Space >: _Space
 {
     enum {d = _Dim};
-    ptrdiff_t upper, opponent, next;
-    ptrdiff_t lower[_Dim + 1]; 
+    ptrdiff_t upper, opponent,
+              //opponext,
+              next;
+    //ptrdiff_t lower[_Dim + 1]; 
+    ptrdiff_t lower;
+    AbstractSimplex()
+    {
+        upper = -1;
+        opponent = -1;
+        next = -1;
+        lower = -1;
+    };
+    AbstractSimplex(const AbstractSimplex &s): _Space(s)
+    {
+        upper = s.upper;
+        opponent = s.opponent;
+        //opponext = s.opponext;
+        next = s.next;
+        lower = s.lower;
+    }
 };
 
 ///terminate the recursion in the empty simplex (simplicial set) with
@@ -206,7 +225,10 @@ template< template< class U, class V > class _Containment,
     AccessScheme::Index, _Containment,
     _Allocator, _Space >: _Space
 {
+
     enum { d = -1, };
+    AbstractSimplex(){};
+    AbstractSimplex(AbstractSimplex &s){};
 };
 
 
@@ -218,8 +240,13 @@ template< int _Dim,  template< class U, class V > class _Containment,
     AccessScheme::Index, _Containment, _Allocator, Set< _Dim > >: Set < _Dim >
 {
     enum {d = _Dim};
-    ptrdiff_t upper, opponent, next;
-    ptrdiff_t lower[_Dim + 1];
+    ptrdiff_t upper, opponent, 
+              //opponext,
+              next;
+    //ptrdiff_t lower[_Dim + 1];
+    ptrdiff_t lower; 
+    AbstractSimplex(){};
+    AbstractSimplex(AbstractSimplex &s){};
 };
 
 ///terminate the recursion in the empty simplex (simplicial set) with dimension -1
@@ -229,6 +256,8 @@ struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment,
     _Allocator, Set< -1 > >: Set< -1 >
 {
     enum { d = -1, };
+    AbstractSimplex(){};
+    AbstractSimplex(AbstractSimplex &s){};
 };
 template< int _D, class _SC > struct ContainerFiller
 { 
@@ -249,7 +278,7 @@ template< int _D, class _SC > struct ContainerFiller
         /*typedef AbstractSimplex< _D, LinkType::Single, 
                 AccessScheme::Index, _SC::template Containment,
                 _SC::template Allocator, typename _SC::template Space< _D > > Simplex;*/
-        s.simplex_containers[_D - 1] = new typename _SC::template Containment<
+        s.simplex_containers[_D ] = new typename _SC::template Containment<
             typename _SC::template Simplex< _D >, typename _SC::template Allocator< 
             typename _SC::template Simplex< _D > > >;
         ContainerFiller< _D - 1, _SC >::fill(s);
@@ -258,8 +287,8 @@ template< int _D, class _SC > struct ContainerFiller
 
 template< class _SC > 
 struct ContainerFiller< -1, _SC >{ static inline void fill(_SC&){}};
-template< class _SC > 
-struct ContainerFiller< 0, _SC >{ static inline void fill(_SC&){}};
+//template< class _SC > 
+//struct ContainerFiller< 0, _SC >{ static inline void fill(_SC&){}};
 
 
 template< int _D, class _IT, class  _SC > struct IterFiller
@@ -329,15 +358,28 @@ template< int _Dim,
 
         template < int D >
         inline AbstractSimplicialComplexIterator < AbstractSimplicialComplex >
-        insert( Simplex< D > s )
+        insert( Simplex< D > &s )
         {
 
             AbstractSimplicialComplexIterator<AbstractSimplicialComplex>
                 iter(this);
-            //iter.insert(s);
+            iter.insert(s);
             return iter;
 
         }
+        /*
+        template< int i >
+        constexpr  Containment< Simplex< i >,
+                  Allocator< Simplex < i > > > *
+                      fick( int j = i )
+                      {
+                          return static_cast< 
+                              Containment< Simplex< i >,
+                  Allocator< Simplex < i > > > *
+>(simplex_containers[i]);
+                      }
+                      */
+
         inline void* operator [] (const int i)
         {
             //Container< i > C;
@@ -345,8 +387,8 @@ template< int _Dim,
             //return *((Container< i > *) simplex_containers[D]);
             //return new F;
         }
-        
-        void* simplex_containers[_Dim];
+  
+        void* simplex_containers[_Dim + 1];
         int bla;
 };
 template< int _Dim, LinkType _LType, AccessScheme _AScheme,
@@ -366,6 +408,10 @@ AbstractSimplicialComplex< _Dim, _LType,
           using Simplex = AbstractSimplex< D, LinkType::Single,
                  AccessScheme::Index, _Containment,
                  _Allocator, _Space >;
+        template< int D >
+        using Container = _Containment< Simplex< D >,
+              _Allocator< Simplex < D > > >;
+
 
         AbstractSimplicialComplexIterator(ASCT* sc)
         {
@@ -403,14 +449,30 @@ AbstractSimplicialComplex< _Dim, _LType,
                     AbstractSimplicialComplexIterator >::doit(*this);	
                 return *this;
             }
+        template < int D >
+            inline Simplex< D > &
+            get(Simplex< D > s)
+            {
 
-        inline ptrdiff_t& operator [] (ptrdiff_t i)
+                return 
+                (*(static_cast< Container< D > * >
+                        (m_sd->simplex_containers[D])))
+                    [simplicesindices[ D ]];
+
+
+            }
+        inline ptrdiff_t getID(ptrdiff_t i)
+        {
+            return simplicesindices[i];
+        }
+
+        inline ptrdiff_t operator [] (ptrdiff_t i)
         {
             return simplicesindices[i];
         }
 
         void*	    iterdata[_Dim + 1];
-        ptrdiff_t	simplicesindices[_Dim];
+        ptrdiff_t	simplicesindices[_Dim + 1];
         ASCT	*m_sd;
 };
 
@@ -427,6 +489,16 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
                 LinkType::Single, AccessScheme::Index, _Containment,
                 _Allocator, _Space > ASCT;
         typedef AbstractSimplicialComplexIterator< ASCT > IterT;
+
+        template< int D >
+          using Simplex = AbstractSimplex< D, LinkType::Single,
+                AccessScheme::Index, _Containment,
+                _Allocator, _Space >;
+
+        template< int D >
+        using Container = _Containment< Simplex< D >,
+              _Allocator< Simplex < D > > >;
+
         //use const_expr for operations
         template< int _D, class _It >
             struct simplexFlip
@@ -482,11 +554,27 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
                 static inline bool doit(IterT &iter, 
                         typename ASCT::template Simplex< _D > s)
                 {
-                    /*
+                    (static_cast< Container< _D > * >(
+                                                      iter.m_sd
+                                                      ->
+                                                      simplex_containers[_D]
+                                                     ))
+                        ->push_back(s);
+                    iter.simplicesindices[ _D ] = 
+                        (static_cast< Container< _D > * >(
+                                                          iter.m_sd
+                                                          ->
+                                                          simplex_containers[_D]
+                                                         ))
+                        ->size() - 1;
+
+
+                  /* 
                     bool succ;
                     int inv = simd_sum< int,
-                        _D >::eval(iter.m_sh->simplex_containers[_D - 1]
-                                [iter.simplicesindices[_D - 1]].vertices);
+                        _D >::eval((*(static_cast< Container< _D - 1 > * >(
+                                    iter.m_sd->simplex_containers[_D - 1]))
+                                [iter.simplicesindices[_D - 1]]).vertices);
                     IterT start, run;
                     start = iter;
                     iter.simplicesindices[ _D - 1] = 
@@ -500,6 +588,14 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
                     }while( simd_sum< int, _D >::eval(
                                 run.spimplicesindices[_D - 1].vertices) != inv);
                     simplexAlign< _D - 1, _It >::doit(iter);
+                    //
+                    //(static_cast< Container< _D > * >(
+                    //                                  iter.m_sd
+                    //                                  ->
+                    //                                  simplex_containers[_D]
+                    //                                  ))
+                    //   ->push_back(s);
+                        
                     */
                     return true;
 
@@ -510,7 +606,7 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
         template< int _D, class _It >
             struct simplexAlign
             {
-                inline bool doit(IterT &iter)
+                static inline bool doit(IterT &iter)
                 {
                     bool succ;
                     int inv = simd_sum< int,
@@ -535,9 +631,37 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
             };
 
         template< class _It >
+            struct insert< 0, _It >
+            {
+                static inline bool doit(IterT &iter, 
+                        typename ASCT::template Simplex< 0 > s)
+                {
+                    (static_cast< Container< 0 > * >(
+                                                      iter.m_sd
+                                                      ->
+                                                      simplex_containers[0]
+                                                      ))
+                        ->push_back(s);
+
+                    iter.simplicesindices[ 0 ] = 
+                        (static_cast< Container< 0 > * >(
+                                                          iter.m_sd
+                                                          ->
+                                                          simplex_containers[0]
+                                                         ))
+                        ->size() - 1;
+
+
+                    return true;
+
+                }
+
+            };
+
+        template< class _It >
             struct simplexAlign< 0, _It >
             {
-                inline bool doit(IterT &iter)
+                static inline bool doit(IterT &iter)
                 {
                     return true;
                 }
@@ -546,7 +670,7 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
         template< int _D, class _It >
             struct simplexCCW
             {
-                inline bool doit(IterT &iter)
+                static inline bool doit(IterT &iter)
                 {
                     bool succ;
                     simplexFlip< _D - 2, _It >::doit(iter);
@@ -558,7 +682,7 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
         template <class _It>
             struct simplexFlip< 1, _It>
             {
-                inline bool doit(IterT &iter)
+                static inline bool doit(IterT &iter)
                 {	
                     ptrdiff_t oppo, high;
 
@@ -763,13 +887,29 @@ struct EuklidianMetric
     typedef typename IntegerChooser< D * sizeof(ValueType) >::IntegerType 
         KeyType;
     typedef Point Vector;
+    //struct Vector: Point {};
+    static inline KeyType dist(Point p0, Point p1)
+    {
+        KeyType dist = 0;
+        for(ptrdiff_t i = 0; i < D; i++)dist += 
+            p1[i] - p0[i] *
+            p1[i] - p0[i];
+        dist = std::sqrt(dist);
+        return dist;
+    }
     static inline Vector distance(Point p0, Point p1)
     {
         Vector d;
         for(ptrdiff_t i = 0; i < D; i++)d[i] = p1[i] - p0[i];
         return d;
     }
-
+    /*
+    inline Vector operator - (Vector v0)
+    {
+        Vector v;
+        for(ptrdiff_t i = 0; i < D; i++) v[i] = v0[i]
+    }
+    */
     //draftly putting Morton Code into the metric
     //only makes sense with integer
 
@@ -1026,6 +1166,7 @@ template< int D, int M,
                     key = hc.key;
                     isleaf = hc.isleaf;
                     weight = hc.weight;
+                    vertex_id = hc.vertex_id;
                     age = hc.age;
 
                 }
@@ -1100,6 +1241,8 @@ template< int D, int M,
                 Allocator< HyperCube > >::difference_type diff_type;
         typedef Containment< diff_type, Allocator< diff_type > > Indices;
         typedef Containment< KeyType, Allocator< KeyType > > Keys;
+        typedef Containment< std::pair< KeyType, ptrdiff_t >, Allocator<
+            std::pair< KeyType, ptrdiff_t > > > KeysnCubes;
         inline bool is(const KeyType key, int level)
         {
             HyperCube *hypercuberef = &hypercubes[0][0];
@@ -1168,6 +1311,107 @@ template< int D, int M,
             PointT p = MetricTraitT::morton_decode(key);
             PointT n;
             Keys samplers;
+            //samplers.push_back(key);
+            //L_1
+            for(int i = 0; i < (D); i++)
+            {
+
+                ValueType o = 0x1 << (((sizeof(KeyType) * 8 ) / D) 
+                        - (level - 1) );
+                //ValueType o = 0x1 << ( sizeof(l_basevec[i]) * 8 - level - 1);
+                n = p;
+                n[i] += o;
+                samplers.push_back(MetricTraitT::morton_encode(n));
+                n = p;
+                n[i] -= o;
+                samplers.push_back(MetricTraitT::morton_encode(n));
+                po[i][0] = -o;
+                po[i][1] = o;
+            }
+            
+            
+            for(int i = 0; i < ipow< 2, D >::eval; i++)
+            {
+                n = p;
+                for(int j = 0; j < D; j++)
+                    n[j] += po[j][i & (0x1 << j) ? 1 : 0];
+                samplers.push_back(MetricTraitT::morton_encode(n));
+            }
+
+            for(int k = 0; k < D; k++)
+            {
+                for(int i = 0; i < ipow< 2, D >::eval; i++)
+                {
+                    n = p;
+                    for(int j = 0; j < D; j++)
+                        n[(j + 1) % D] += po[(j + 1) % D][i & (0x1 << j)
+                            ? 1 : 0];
+                    n[k] = p[k];
+                    samplers.push_back(MetricTraitT::morton_encode(n));
+                }
+            }
+           
+            //return samplers;
+            //for(int i = 0; i < ipow< ipow< 2, 2 >::eval, D >::eval; i++)
+                //\f$ 2^n-tree level distance d 
+                //{2^d}^n
+                //mask out distance 2 within
+                //p = \infty
+            //for(int i = 0; i < ipow< 3, D >::eval - 1; i++)
+            for(KeyType sampler: samplers)
+                if(is(sampler, level)) l_surrounding.push_back(sampler);
+            return l_surrounding;
+
+        }
+        /*
+        inline KeysnCubes getAdjKC(const KeyType key, int level)
+        {
+
+            //generate vectors to add
+            PointT l_adjvec[ ipow< 3, D >::eval];
+            PointT l_basevec[ D ];
+            for(int i = 0; i < D; i++)
+            {
+                l_basevec[i][i] = 0x1;
+                l_basevec[i][i] <<= ( sizeof(l_basevec[i]) * 8 - level - 1);
+            }
+            for(int i = 0; i < ipow< 3, D >::eval; i++)
+            {
+
+            }
+            Keys l_surrounding;
+            //std::stack< int > down;
+            //KeyType key;
+            KeyType b[D]; //base
+            //KeyType zero =  key & (~(ipow<2,
+            //            (sizeof(KeyType) * 8t / D) - level>::eval - 1));
+            for(int i = 0; i < D; i++) b[i] = 0b1 << 
+                ((((sizeof(KeyType) * 8 / D) - level) * D)  - i);
+            //to do: snaking
+            //using point symmetry to mask out distance 2
+            KeyType key_back;
+            //key = MetricTraitT::morton_encode(p);
+           // for(int i = 0; i < D; i++) l_mortonbase[i] = 
+           // MetricTraitT::morton_encode(l_basevec[i]); 
+            key_back = key;
+            int i;
+
+            HyperCube *hypercuberef = &hypercubes[0][0];
+            HyperCube l_c;
+            int pos, next, prev;
+            unsigned int subkey;
+
+            
+            //for(int i = 0; i < ipow< 3, D >::eval; i++)
+            //O'Rourke, "Computing Relative Neitghborhood graph in the L_1
+            //and L_\infty metrics," Pattern Recognition, 1982. 
+            //
+            KeyType neighbourhood[ipow< ipow< 2, 2 >::eval, D >::eval];
+            //KeyType sampler[ipow< 3, D >::eval - 1];
+            int po[D][2];
+            PointT p = MetricTraitT::morton_decode(key);
+            PointT n;
+            Keys samplers;
             samplers.push_back(key);
             //L_1
             for(int i = 0; i < (D); i++)
@@ -1194,7 +1438,7 @@ template< int D, int M,
             }
             //return samplers;
             //for(int i = 0; i < ipow< ipow< 2, 2 >::eval, D >::eval; i++)
-                //\f$ 2^n-tree level distance d 
+                ;//\f$ 2^n-tree level distance d 
                 //{2^d}^n
                 //mask out distance 2 within
                 //p = \infty
@@ -1205,6 +1449,7 @@ template< int D, int M,
             return l_surrounding;
 
         }
+*/
 
         inline bool isCube(const PointT &p, int level)
         {   
@@ -1231,6 +1476,10 @@ template< int D, int M,
             return false;
         }
 
+        inline HyperCube& operator [](KeyType key)
+        {
+            return getCubebyIndex(key);
+        }
         inline HyperCube& getCubebyIndex(KeyType key)
         {
             HyperCube *hypercubep = &hypercubes[0][0];
@@ -1299,6 +1548,7 @@ template< int D, int M,
                         pos = counter[i];
                         l_c.key = key_back;
                         l_c.level = i;
+                        l_c.vertex_id = id;
                         hypercubes[i].push_back(l_c);
                         //pos = hypercubes[i].size() - 1;
                         hypercuberef->childs[subkey] = pos;
@@ -1331,12 +1581,28 @@ template< int D, int M,
 template < int D, template< int _D > class M >
 struct MortonSpace: public TopologicalSpace< D >
 {
+    MortonSpace()
+    {
+    }
+
+    MortonSpace(const MortonSpace &s)
+    {
+    }
 };
 
 template < template< int D > class M >
 struct MortonSpace< 1, M >: public TopologicalSpace< 1 >
 {
-    typename M< 0 >::KeyType v;
+    typename M< 4 >::KeyType v;
+
+    MortonSpace()
+    {
+        v = 0;
+    }
+    MortonSpace(const MortonSpace &s)
+    {
+        v = s.v;
+    }
 };
 
 //specialise the simplices for morton space
@@ -1371,7 +1637,6 @@ struct CompressedMetricalSpace: public TopologicalSpace< D >
 
 
 
-
 template < int D, template< int _D > class _M >
 struct LinearSpaceCompressed: public MetricSpace< D, _M >
 {
@@ -1387,8 +1652,12 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         Vector;
     typedef typename ExteriorPower< 0, 0, LinearSpaceCompressed>::Vector
         Scalar;
-    
+   
+    typedef std::vector< std::pair< KeyType, KeyType > > Edges;
+    typedef std::vector< std::array< KeyType, 5 > > Tets;
 
+    typedef MortonSimplicialComplex< D, _M > SC;
+  //  typedef MortonSimplex< D, _M > S;
     typedef MortonSimplicialComplexIterator< d, _M > Iterator;
     /*
     struct Iterator: MortonSimplicialComplexIterator < d, _M>
@@ -1398,7 +1667,7 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     struct Vertex: MortonSimplex< 0, _M >
     {
         enum { k = 1, d = D};
-        KeyType v;
+        //KeyType v;
         /*
         inline PValueType operator [](ptrdiff_t n) { 
             return Metric::morton_decode(this->v)[n];
@@ -1442,18 +1711,161 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     }
     */
     //inline Iterator insert(PointT &p)
+    //
+    inline Tets & getTets()
+    {
+        return m_tets;
+    }
+    inline Edges& getEdges()
+    {
+        return m_edges;
+    }
     inline KeyType insert(KeyType k)
     {
         
-        //if(access_tree.is(k, Tree::numoflevels)) return k;
+        if(access_tree.is(k, 7)) return k;
         typename Tree::Keys neighbours =
-            access_tree.getAdjacencies(k, 5);
+            access_tree.getAdjacencies(k, 7);
         //Iter(simplicial_complex;
         Vertex v;
         v.v = k;
         MortonSimplex< 0, _M > vv;
-        Iterator iter;
-        iter = simplicial_complex.insert(vv);
+        vv.v = k;
+        MortonSimplex< 1, _M > he0, he1;
+        std::vector< MortonSimplex< 1, _M > > halfedges;
+        Iterator iter0, iter1;
+        iter0 = simplicial_complex.insert(v);
+        access_tree.insert(k, iter0[0]);
+        //if(neighbours.size() < 3) return k;
+        //
+        int si = neighbours.size();
+
+
+        std::multimap< int, KeyType > sorted_by_dist;
+       // sorted_by_dist.insert(std::make_pair(0, k));
+        for(KeyType lk: neighbours)
+        {
+            KeyType pk = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[lk].vertex_id].v;
+            sorted_by_dist.insert(
+                    std::make_pair(Metric::dist(
+                            Metric::morton_decode(k),
+                            Metric::morton_decode(pk)
+                            ), pk)
+                    );
+        }
+
+        std::array< KeyType, 5 > tet; int c = 0;
+        tet[0] = tet[1] = tet[2] = tet[3] = k;
+        /*
+        for(KeyType lk: neighbours)
+        {
+            he0.lower = access_tree[k].vertex_id;
+            he1.lower = access_tree[lk].vertex_id;
+            iter0 = simplicial_complex.insert(he0);
+            iter1 = simplicial_complex.insert(he1);
+            
+            (*(static_cast< typename SC::template Container< 1 > * >(
+                    simplicial_complex[1])))[iter0[1]].opponent = iter1[1];
+            (*(static_cast< typename SC::template Container< 1 > * >(
+                    simplicial_complex[1])))[iter1[1]].opponent = iter0[1];
+                    
+            
+            KeyType k0 = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))[he1.lower].v;
+            KeyType k1 = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))[he0.lower].v;
+            tet[c % 4] = k0; tet[(c+1) % 4] = k1;
+            c++;
+
+            m_edges.push_back(std::make_pair(k1, k0));
+
+        }
+        */
+        /*
+        if(neighbours.size() >= 1){
+            KeyType k0, k1;
+            typename std::multimap< int, KeyType >::iterator beg =
+                sorted_by_dist.begin();
+            k0 = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[beg->second].vertex_id].v;
+            beg++;
+            
+            k1 = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[beg->second].vertex_id].v;
+           // beg++;
+
+            m_edges.push_back(std::make_pair(k1, k0));
+        }
+*/
+
+        if(neighbours.size() > d){
+            /*
+            KeyType tet0[4];
+            tet[0] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[neighbours[0]].vertex_id].v;
+            tet[1] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[neighbours[1]].vertex_id].v;
+            tet[2] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[neighbours[2]].vertex_id].v;
+            tet[3] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[neighbours[3]].vertex_id].v;
+            m_tets.push_back(tet);
+            */
+            Simplex< d > simp;
+            typename std::multimap< int, KeyType >::iterator beg =
+                sorted_by_dist.begin();
+            tet[0] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[beg->second].vertex_id].v;
+            beg++;
+            tet[1] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[beg->second].vertex_id].v;
+            beg++;
+            tet[2] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[beg->second].vertex_id].v;
+            beg++;
+            
+            tet[3] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[beg->second].vertex_id].v;
+            m_tets.push_back(tet);
+
+
+            for(int i = 0; i < 4; i++)
+                m_edges.push_back(std::make_pair(tet[i % d], tet[(i+1)%d]));
+            m_edges.push_back(std::make_pair(tet[0], tet[2]));
+            m_edges.push_back(std::make_pair(tet[1], tet[3]));
+
+
+        }
+
+
+        return k;
+
+
 
         //access_tree.insert(k, -1);
 
@@ -1465,7 +1877,7 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         //numbers of neighbours -> dimension for triangulation
         //retriangulate
         
-        return access_tree.insert(k, -1);
+        //return access_tree.insert(k, -1);
     }
     inline KeyType insert(PointT &p)
     {
@@ -1503,7 +1915,8 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         access_tree.clear();
     }
     Tree access_tree; //access tree for 0-simplices
-
+    Edges m_edges;
+    Tets m_tets;
     MortonSimplicialComplex< D, _M > simplicial_complex; //replace
     //std-containers with proper trees with metrical traits
     Vector e[D]; //basis
