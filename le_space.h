@@ -9,6 +9,7 @@
 //abstract simplex with topological space as default space
 //metrical traits for every space (quasi-, pseudo-, semi- metrics 
 //included divergences & stuff) bregman divergences as an example
+//empty sets are void :3
 
 #ifndef LE_SPACE_H
 #define LE_SPACE_H
@@ -17,6 +18,7 @@
 #include <cstdint>
 #include <iostream>
 #include <array>
+#include <cmath>
 //some helpers, rewrite them with constexpr
 
 template< bool _cond, class _then, class _else >
@@ -175,22 +177,22 @@ struct MetricSpace: UniformSpace < _Dim > {};
  */
 template< int _Dim, LinkType _LType, AccessScheme _AScheme,
     template< class U , class V > class Containment , template< class U >
-    class Allocator, class _Space > class AbstractSimplicialComplex{};
-template< typename _ASD > struct AbstractSimplicialComplexTopologyTrait{};
+    class Allocator, class _Space > class AbstractHalfSimplicialComplex{};
+template< typename _ASD > struct AbstractHalfSimplicialComplexTopologyTrait{};
 template< typename _Iterator > 
-struct AbstractSimplicialComplexIteratorFunctionTrait{};
-template< typename _ASD > struct AbstractSimplicialComplexIterator{};
+struct AbstractHalfSimplicialComplexIteratorFunctionTrait{};
+template< typename _ASD > struct AbstractHalfSimplicialComplexIterator{};
 template< int _Dim, LinkType _LType, AccessScheme _AScheme,  
     template< class U, class V > class _Containment,
     template< class U > class _Allocator, class _Space >
-    struct AbstractSimplex: _Space {};
+    struct AbstractHalfSimplex: _Space {};
 
 
 ///why d + 1 you may ask. 'cause \f$ {d+1 \choose d} = d+1\f$ , u kno'. 
 //thus we're terminating the recursion at dimension = -1
 template< int _Dim,  template< class U, class V > class _Containment,
     template< class U > class _Allocator,  class _Space >
-    struct AbstractSimplex< _Dim, LinkType::Single, AccessScheme::Index,
+    struct AbstractHalfSimplex< _Dim, LinkType::Single, AccessScheme::Index,
     _Containment, _Allocator, _Space >: _Space
 {
     enum {d = _Dim};
@@ -199,14 +201,14 @@ template< int _Dim,  template< class U, class V > class _Containment,
               next;
     //ptrdiff_t lower[_Dim + 1]; 
     ptrdiff_t lower;
-    AbstractSimplex()
+    AbstractHalfSimplex()
     {
         upper = -1;
         opponent = -1;
         next = -1;
         lower = -1;
     };
-    AbstractSimplex(const AbstractSimplex &s): _Space(s)
+    AbstractHalfSimplex(const AbstractHalfSimplex &s): _Space(s)
     {
         upper = s.upper;
         opponent = s.opponent;
@@ -221,14 +223,14 @@ template< int _Dim,  template< class U, class V > class _Containment,
 template< template< class U, class V > class _Containment, 
     template< class U > class _Allocator, 
     class _Space >
-    struct AbstractSimplex< -1, LinkType::Single,
+    struct AbstractHalfSimplex< -1, LinkType::Single,
     AccessScheme::Index, _Containment,
     _Allocator, _Space >: _Space
 {
 
     enum { d = -1, };
-    AbstractSimplex(){};
-    AbstractSimplex(AbstractSimplex &s){};
+    AbstractHalfSimplex(){};
+    AbstractHalfSimplex(AbstractHalfSimplex &s){};
 };
 
 
@@ -236,7 +238,7 @@ template< template< class U, class V > class _Containment,
 //we're terminating the recursion at dimension = -1
 template< int _Dim,  template< class U, class V > class _Containment,
     template< class U > class _Allocator >
-    struct AbstractSimplex< _Dim, LinkType::Single,
+    struct AbstractHalfSimplex< _Dim, LinkType::Single,
     AccessScheme::Index, _Containment, _Allocator, Set< _Dim > >: Set < _Dim >
 {
     enum {d = _Dim};
@@ -245,43 +247,53 @@ template< int _Dim,  template< class U, class V > class _Containment,
               next;
     //ptrdiff_t lower[_Dim + 1];
     ptrdiff_t lower; 
-    AbstractSimplex(){};
-    AbstractSimplex(AbstractSimplex &s){};
+    AbstractHalfSimplex(){};
+    AbstractHalfSimplex(AbstractHalfSimplex &s){};
 };
 
 ///terminate the recursion in the empty simplex (simplicial set) with dimension -1
 template< template< class U, class V > class _Containment,
     template< class U > class _Allocator >
-struct AbstractSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment,
+struct AbstractHalfSimplex< -1, LinkType::Single, AccessScheme::Index, _Containment,
     _Allocator, Set< -1 > >: Set< -1 >
 {
     enum { d = -1, };
-    AbstractSimplex(){};
-    AbstractSimplex(AbstractSimplex &s){};
+    AbstractHalfSimplex(){};
+    AbstractHalfSimplex(AbstractHalfSimplex &s){};
 };
-template< int _D, class _SC > struct ContainerFiller
+
+template< int D, class SC > struct makeHalfSimplex
+{
+    static inline void make(SC &s)
+    {
+        
+    }
+
+};
+//default filling with complete simplex of dimension D
+template< int D, class _SC > struct ContainerFiller
 { 
     static inline void fill(_SC& s)
     {
         /*
-        typedef AbstractSimplex< _D - 1, LinkType::Single, 
+        typedef AbstractHalfSimplex< _D - 1, LinkType::Single, 
                 AccessScheme::Index, _SC::template Containment,
                 _SC::template Allocator,
-                typename _SC::template Space< _D - 1 > > AbstractSimplexT;
+                typename _SC::template Space< _D - 1 > > AbstractHalfSimplexT;
         typedef typename _SC::_Trait::template 
-            SimplexT< _D, AbstractSimplexT > Simplex;
+            HalfSimplexT< _D, AbstractHalfSimplexT > HalfSimplex;
         typedef typename _SC::template 
-            _Containment< Simplex, 
-            _SC::template _Allocator< Simplex > > Simplices;
+            _Containment< HalfSimplex, 
+            _SC::template _Allocator< HalfSimplex > > Simplices;
         s.simplex_containers[_D - 1] = new Simplices;
         */
-        /*typedef AbstractSimplex< _D, LinkType::Single, 
+        /*typedef AbstractHalfSimplex< _D, LinkType::Single, 
                 AccessScheme::Index, _SC::template Containment,
-                _SC::template Allocator, typename _SC::template Space< _D > > Simplex;*/
-        s.simplex_containers[_D ] = new typename _SC::template Containment<
-            typename _SC::template Simplex< _D >, typename _SC::template Allocator< 
-            typename _SC::template Simplex< _D > > >;
-        ContainerFiller< _D - 1, _SC >::fill(s);
+                _SC::template Allocator, typename _SC::template Space< _D > > HalfSimplex;*/
+        s.simplex_containers[D] = new typename _SC::template Containment<
+            typename _SC::template HalfSimplex< D >, typename _SC::template Allocator< 
+            typename _SC::template HalfSimplex< D > > >;
+        ContainerFiller< D - 1, _SC >::fill(s);
     };	
 };
 
@@ -295,12 +307,12 @@ template< int _D, class _IT, class  _SC > struct IterFiller
 {
     static inline void fill(_IT* i)
     {
-        typedef  AbstractSimplex< _D, LinkType::Single,
+        typedef  AbstractHalfSimplex< _D, LinkType::Single,
                  AccessScheme::Index, _SC::template Containment,
                  _SC::template Allocator, 
-                 typename _SC::Space > Simplex;
-        i->iterdata[_D ] = new Simplex;
-        //void* foo = new Simplex;
+                 typename _SC::Space > HalfSimplex;
+        i->iterdata[_D ] = new HalfSimplex;
+        //void* foo = new HalfSimplex;
         IterFiller< _D - 1, _IT, _SC >::fill(i);
     }
 };
@@ -312,7 +324,7 @@ template< class _IT, class _SC > struct IterFiller< -1, _IT, _SC >{
 template< int _Dim,
     template< class U , class V > class _Containment,
     template< class U > class _Allocator,  class _Space> 
-    class AbstractSimplicialComplex< _Dim,
+    class AbstractHalfSimplicialComplex< _Dim,
     LinkType::Single, AccessScheme::Index,
     _Containment, _Allocator, _Space >
 {
@@ -325,19 +337,19 @@ template< int _Dim,
         //template< int D >
         using Space = _Space;
         template< int D >
-          using Simplex = AbstractSimplex< D, LinkType::Single,
+          using HalfSimplex = AbstractHalfSimplex< D, LinkType::Single,
                  AccessScheme::Index, _Containment,
                  _Allocator, Space >;
         template< int D >
-            using Container = Containment< Simplex< D >,
-                  Allocator< Simplex< D > > >;
+            using Container = Containment< HalfSimplex< D >,
+                  Allocator< HalfSimplex< D > > >;
 
   
-        AbstractSimplicialComplex()
+        AbstractHalfSimplicialComplex()
         {
-            ContainerFiller< _Dim, AbstractSimplicialComplex >::fill(*this);
+            ContainerFiller< _Dim, AbstractHalfSimplicialComplex >::fill(*this);
         }
-        ~AbstractSimplicialComplex()
+        ~AbstractHalfSimplicialComplex()
         {
             //for(int i = 0; i < _Dim; i++) delete simplex_containers[i];
 
@@ -357,11 +369,11 @@ template< int _Dim,
 
 
         template < int D >
-        inline AbstractSimplicialComplexIterator < AbstractSimplicialComplex >
-        insert( Simplex< D > &s )
+        inline AbstractHalfSimplicialComplexIterator < AbstractHalfSimplicialComplex >
+        insert( HalfSimplex< D > &s )
         {
 
-            AbstractSimplicialComplexIterator<AbstractSimplicialComplex>
+            AbstractHalfSimplicialComplexIterator<AbstractHalfSimplicialComplex>
                 iter(this);
             iter.insert(s);
             return iter;
@@ -369,13 +381,13 @@ template< int _Dim,
         }
         /*
         template< int i >
-        constexpr  Containment< Simplex< i >,
-                  Allocator< Simplex < i > > > *
+        constexpr  Containment< HalfSimplex< i >,
+                  Allocator< HalfSimplex < i > > > *
                       fick( int j = i )
                       {
                           return static_cast< 
-                              Containment< Simplex< i >,
-                  Allocator< Simplex < i > > > *
+                              Containment< HalfSimplex< i >,
+                  Allocator< HalfSimplex < i > > > *
 >(simplex_containers[i]);
                       }
                       */
@@ -394,38 +406,38 @@ template< int _Dim,
 template< int _Dim, LinkType _LType, AccessScheme _AScheme,
     template< class U , class V > class _Containment,
     template< class U > class _Allocator, class _Space> 
-class AbstractSimplicialComplexIterator<
-AbstractSimplicialComplex< _Dim, _LType,
+class AbstractHalfSimplicialComplexIterator<
+AbstractHalfSimplicialComplex< _Dim, _LType,
     _AScheme, _Containment, _Allocator, _Space > >
 {
     public:
-        typedef AbstractSimplicialComplex< _Dim, _LType,
+        typedef AbstractHalfSimplicialComplex< _Dim, _LType,
                 _AScheme, _Containment, _Allocator, _Space > ASCT;
-        typedef AbstractSimplicialComplexTopologyTrait< ASCT > ASCTopoT;
-        typedef AbstractSimplicialComplexIteratorFunctionTrait<
-            AbstractSimplicialComplexIterator > IterFuncT;
+        typedef AbstractHalfSimplicialComplexTopologyTrait< ASCT > ASCTopoT;
+        typedef AbstractHalfSimplicialComplexIteratorFunctionTrait<
+            AbstractHalfSimplicialComplexIterator > IterFuncT;
         template< int D >
-          using Simplex = AbstractSimplex< D, LinkType::Single,
+          using HalfSimplex = AbstractHalfSimplex< D, LinkType::Single,
                  AccessScheme::Index, _Containment,
                  _Allocator, _Space >;
         template< int D >
-        using Container = _Containment< Simplex< D >,
-              _Allocator< Simplex < D > > >;
+        using Container = _Containment< HalfSimplex< D >,
+              _Allocator< HalfSimplex < D > > >;
 
 
-        AbstractSimplicialComplexIterator(ASCT* sc)
+        AbstractHalfSimplicialComplexIterator(ASCT* sc)
         {
             m_sd = sc;
-            IterFiller< _Dim, AbstractSimplicialComplexIterator,
+            IterFiller< _Dim, AbstractHalfSimplicialComplexIterator,
                 ASCT >::fill(this);
         }
-        AbstractSimplicialComplexIterator()
+        AbstractHalfSimplicialComplexIterator()
         {
-            IterFiller< _Dim, AbstractSimplicialComplexIterator,
+            IterFiller< _Dim, AbstractHalfSimplicialComplexIterator,
                 ASCT >::fill(this);
         }
    
-        ~AbstractSimplicialComplexIterator()
+        ~AbstractHalfSimplicialComplexIterator()
         {
             //for(int i = 0; i < _Dim; i++) delete iterdata[i];
         }
@@ -435,23 +447,23 @@ AbstractSimplicialComplex< _Dim, _LType,
             return IterFuncT::isvalid(*this);
         }
         template < int D >
-            inline AbstractSimplicialComplexIterator& 
-            insert(Simplex< D > &s)
+            inline AbstractHalfSimplicialComplexIterator& 
+            insert(HalfSimplex< D > &s)
             {
                 ASCTopoT::template insert<D,
-                AbstractSimplicialComplexIterator >::doit(*this, s);	
+                AbstractHalfSimplicialComplexIterator >::doit(*this, s);	
                 return *this;
             }
         template < int _D >
-            inline AbstractSimplicialComplexIterator& simplexCCW()
+            inline AbstractHalfSimplicialComplexIterator& simplexCCW()
             {
                 ASCTopoT::template simplexCCV<_D,
-                    AbstractSimplicialComplexIterator >::doit(*this);	
+                    AbstractHalfSimplicialComplexIterator >::doit(*this);	
                 return *this;
             }
         template < int D >
-            inline Simplex< D > &
-            get(Simplex< D > s)
+            inline HalfSimplex< D > &
+            get(HalfSimplex< D > s)
             {
 
                 return 
@@ -471,6 +483,20 @@ AbstractSimplicialComplex< _Dim, _LType,
             return simplicesindices[i];
         }
 
+        template < int D >
+            inline HalfSimplex < D > &
+            makeHalfSimplex()
+            {
+                /*
+                      for(int i = 0; i < nchoosek< ASCT::d, D >::eval; i++)
+          (static_cast< Container< _D > * >(
+                                            s.simplex_containers[D]
+                                           ).push_back(
+                                               new typename 
+                                               _SC::template HalfSimplex< D >
+                                               );
+*/
+            }
         void*	    iterdata[_Dim + 1];
         ptrdiff_t	simplicesindices[_Dim + 1];
         ASCT	*m_sd;
@@ -479,25 +505,25 @@ AbstractSimplicialComplex< _Dim, _LType,
 template< int _Dim,
     template< class U , class V > class _Containment,
     template< class U > class _Allocator, class _Space> 
-class AbstractSimplicialComplexTopologyTrait<  
-AbstractSimplicialComplex< _Dim, LinkType::Single,
+class AbstractHalfSimplicialComplexTopologyTrait<  
+AbstractHalfSimplicialComplex< _Dim, LinkType::Single,
     AccessScheme::Index, _Containment, _Allocator, _Space > >
 {
     public:
 
-        typedef AbstractSimplicialComplex< _Dim,
+        typedef AbstractHalfSimplicialComplex< _Dim,
                 LinkType::Single, AccessScheme::Index, _Containment,
                 _Allocator, _Space > ASCT;
-        typedef AbstractSimplicialComplexIterator< ASCT > IterT;
+        typedef AbstractHalfSimplicialComplexIterator< ASCT > IterT;
 
         template< int D >
-          using Simplex = AbstractSimplex< D, LinkType::Single,
+          using HalfSimplex = AbstractHalfSimplex< D, LinkType::Single,
                 AccessScheme::Index, _Containment,
                 _Allocator, _Space >;
 
         template< int D >
-        using Container = _Containment< Simplex< D >,
-              _Allocator< Simplex < D > > >;
+        using Container = _Containment< HalfSimplex< D >,
+              _Allocator< HalfSimplex < D > > >;
 
         //use const_expr for operations
         template< int _D, class _It >
@@ -552,7 +578,7 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
             struct insert
             {
                 static inline bool doit(IterT &iter, 
-                        typename ASCT::template Simplex< _D > s)
+                        typename ASCT::template HalfSimplex< _D > s)
                 {
                     (static_cast< Container< _D > * >(
                                                       iter.m_sd
@@ -634,7 +660,7 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
             struct insert< 0, _It >
             {
                 static inline bool doit(IterT &iter, 
-                        typename ASCT::template Simplex< 0 > s)
+                        typename ASCT::template HalfSimplex< 0 > s)
                 {
                     (static_cast< Container< 0 > * >(
                                                       iter.m_sd
@@ -727,14 +753,14 @@ AbstractSimplicialComplex< _Dim, LinkType::Single,
 #include <map>
 
 //specialise the simplices for proper spaces
-template< int D > using Simplex = AbstractSimplex< D, LinkType::Single,
+template< int D > using HalfSimplex = AbstractHalfSimplex< D, LinkType::Single,
     AccessScheme::Index, std::vector, std::allocator, TopologicalSpace< D + 1 > >;
-template< int D > using SimplicialComplex = AbstractSimplicialComplex< D,
+template< int D > using HalfSimplicialComplex = AbstractHalfSimplicialComplex< D,
     LinkType::Single, AccessScheme::Index, std::vector, std::allocator,
     TopologicalSpace< D + 1 > >;
-template< int D > using SimplicialComplexTopologyTrait =
-AbstractSimplicialComplexTopologyTrait < SimplicialComplex< D + 1 > >;
-template< int D > using SimplicialComplexIterator = AbstractSimplicialComplexIterator< SimplicialComplex< D > >;
+template< int D > using HalfSimplicialComplexTopologyTrait =
+AbstractHalfSimplicialComplexTopologyTrait < HalfSimplicialComplex< D + 1 > >;
+template< int D > using HalfSimplicialComplexIterator = AbstractHalfSimplicialComplexIterator< HalfSimplicialComplex< D > >;
 
 
 
@@ -828,12 +854,12 @@ struct LinearSpace: public MetricSpace< D, _M >
     //ok, let's do it :|
     typedef typename ExteriorPower< 0, 0, LinearSpace>::Vector Scalar;
     /*
-    struct Scalar: Simplex< 0 >
+    struct Scalar: HalfSimplex< 0 >
     {
         enum { k = 0, d = D };
 
     };*/
-    struct Vertex: Simplex< 0 >//derive from simplex, cause every
+    struct Vertex: HalfSimplex< 0 >//derive from simplex, cause every
                    //linear space is hausdorffian (kolomogorov T_2),
                    //so i hope that's okay
     {
@@ -869,7 +895,7 @@ struct LinearSpace: public MetricSpace< D, _M >
     typedef typename ExteriorPower< 1, d, LinearSpace >::Vector Vector;
     //typedef Vertex Vector; //i guess, every vector is a 1-cell, so ...
 
-    SimplicialComplex< D > simplicial_decomposition;
+    HalfSimplicialComplex< D > simplicial_decomposition;
     Vector e[D]; //basis
 
 };
@@ -1021,15 +1047,15 @@ using SimpleEuklidianSpaceFdouble = LinearSpace< D,
 
 //specialise the simplices for euklidian spaces
 /*
-template< int D, class M > using Simplex = AbstractSimplex< D, LinkType::Single,
+template< int D, class M > using HalfSimplex = AbstractHalfSimplex< D, LinkType::Single,
     AccessScheme::Index, std::vector, std::allocator,
     EuklidianSpace< D, M > >;
-template< int D, class M > using SimplicialComplex =
-AbstractSimplicialComplex< D, LinkType::Single, AccessScheme::Index,
+template< int D, class M > using HalfSimplicialComplex =
+AbstractHalfSimplicialComplex< D, LinkType::Single, AccessScheme::Index,
     std::vector, std::allocator, EuklidianSpace< D, M > >;
-template< int D, class M > using SimplicialComplexTopologyTrait =
-AbstractSimplicialComplexTopologyTrait < SimplicialComplex< D, M > >;
-template< int D, class M > using SimplicialComplexIterator = AbstractSimplicialComplexIterator< SimplicialComplex< D, M > >;
+template< int D, class M > using HalfSimplicialComplexTopologyTrait =
+AbstractHalfSimplicialComplexTopologyTrait < HalfSimplicialComplex< D, M > >;
+template< int D, class M > using HalfSimplicialComplexIterator = AbstractHalfSimplicialComplexIterator< HalfSimplicialComplex< D, M > >;
 */
 
 
@@ -1042,7 +1068,7 @@ template< int K, int D, class S > struct ExteriorPower: QuotientSpace< K, D >
     typedef typename ExteriorPower< 0, 0, S >::Vector Scalar;
     //typedef typename ExteriorPower< 0, 0, S >::Vector Scalar;
 
-    struct Vector: Simplex< K >
+    struct Vector: HalfSimplex< K >
     {
         typename Metric::template ElementT< d > v;
         //or should i use an vector of scalars (would be more canonical)
@@ -1607,25 +1633,25 @@ struct MortonSpace< 1, M >: public TopologicalSpace< 1 >
 
 //specialise the simplices for morton space
 /*
-template< int D, template< int _D > class M > using MortonSimplex =
-AbstractSimplex< D, LinkType::Single, AccessScheme::Index,
+template< int D, template< int _D > class M > using MortonHalfSimplex =
+AbstractHalfSimplex< D, LinkType::Single, AccessScheme::Index,
     std::vector, std::allocator, MortonSpace< D + 1, M > >;
-template< int D, template< int _D > class M > using MortonSimplicialComplex =
-AbstractSimplicialComplex< D, LinkType::Single, AccessScheme::Index,
+template< int D, template< int _D > class M > using MortonHalfSimplicialComplex =
+AbstractHalfSimplicialComplex< D, LinkType::Single, AccessScheme::Index,
     std::vector, std::allocator, MortonSpace< D + 1, M > >;
 */
-template< int D, template< int _D > class M > using MortonSimplex =
-AbstractSimplex< D, LinkType::Single, AccessScheme::Index,
+template< int D, template< int _D > class M > using MortonHalfSimplex =
+AbstractHalfSimplex< D, LinkType::Single, AccessScheme::Index,
     std::vector, std::allocator, MortonSpace< 1, M > >;
-template< int D, template< int _D > class M > using MortonSimplicialComplex =
-AbstractSimplicialComplex< D, LinkType::Single, AccessScheme::Index,
+template< int D, template< int _D > class M > using MortonHalfSimplicialComplex =
+AbstractHalfSimplicialComplex< D, LinkType::Single, AccessScheme::Index,
     std::vector, std::allocator, MortonSpace< 1, M > >;
 template< int D, template< int _D > class M > using
-MortonSimplicialComplexTopologyTrait = AbstractSimplicialComplexTopologyTrait<
-MortonSimplicialComplex< D, M > >;
+MortonHalfSimplicialComplexTopologyTrait = AbstractHalfSimplicialComplexTopologyTrait<
+MortonHalfSimplicialComplex< D, M > >;
 template< int D, template< int _D > class M  > using
-MortonSimplicialComplexIterator = AbstractSimplicialComplexIterator<
-MortonSimplicialComplex< D, M > >;
+MortonHalfSimplicialComplexIterator = AbstractHalfSimplicialComplexIterator<
+MortonHalfSimplicialComplex< D, M > >;
 
 template < int D >
 struct CompressedMetricalSpace: public TopologicalSpace< D >
@@ -1656,15 +1682,15 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     typedef std::vector< std::pair< KeyType, KeyType > > Edges;
     typedef std::vector< std::array< KeyType, 5 > > Tets;
 
-    typedef MortonSimplicialComplex< D, _M > SC;
-  //  typedef MortonSimplex< D, _M > S;
-    typedef MortonSimplicialComplexIterator< d, _M > Iterator;
+    typedef MortonHalfSimplicialComplex< D, _M > SC;
+  //  typedef MortonHalfSimplex< D, _M > S;
+    typedef MortonHalfSimplicialComplexIterator< d, _M > Iterator;
     /*
-    struct Iterator: MortonSimplicialComplexIterator < d, _M>
+    struct Iterator: MortonHalfSimplicialComplexIterator < d, _M>
     {
     };
     */
-    struct Vertex: MortonSimplex< 0, _M >
+    struct Vertex: MortonHalfSimplex< 0, _M >
     {
         enum { k = 1, d = D};
         //KeyType v;
@@ -1729,10 +1755,10 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         //Iter(simplicial_complex;
         Vertex v;
         v.v = k;
-        MortonSimplex< 0, _M > vv;
+        MortonHalfSimplex< 0, _M > vv;
         vv.v = k;
-        MortonSimplex< 1, _M > he0, he1;
-        std::vector< MortonSimplex< 1, _M > > halfedges;
+        MortonHalfSimplex< 1, _M > he0, he1;
+        std::vector< MortonHalfSimplex< 1, _M > > halfedges;
         Iterator iter0, iter1;
         iter0 = simplicial_complex.insert(v);
         access_tree.insert(k, iter0[0]);
@@ -1828,7 +1854,19 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
                 [access_tree[neighbours[3]].vertex_id].v;
             m_tets.push_back(tet);
             */
-            Simplex< d > simp;
+
+            //need to merge simplicial complexes
+            //the unification process is driven by metrics;
+            //we're using powerset graph topology
+            /*
+            void* l_simplex[ d + 1 ];
+            l_simplex[0] = NULL; //dimension -1 -> empty set
+            for(int i = 1; i < d; i++)
+            {
+                l_simplex[i] = new HalfSimplex<
+            }
+            */
+            HalfSimplex< d > simp;
             typename std::multimap< int, KeyType >::iterator beg =
                 sorted_by_dist.begin();
             tet[0] = (*(static_cast< typename SC::template
@@ -1895,11 +1933,11 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         {
 
            // std::cout << (simplicial_complex.getContainer<0>(0))[i].v;//[i].v;
-            //typename SimplicialComplex< D >::Container< 0 > c;
-          //  std::cout << (*((typename SimplicialComplex< D >::template Container< 0 > *)
+            //typename HalfSimplicialComplex< D >::Container< 0 > c;
+          //  std::cout << (*((typename HalfSimplicialComplex< D >::template Container< 0 > *)
           //      simplicial_complex.simplex_containers[0]))[i].v;
           //  std::cout << simplicial_complex[i];
-            //m.insert(make_pair(((SimplicialComplex::Container<0> *)(simplicial_complex[0]))[i].v, NN[i]));
+            //m.insert(make_pair(((HalfSimplicialComplex::Container<0> *)(simplicial_complex[0]))[i].v, NN[i]));
           //  std::cout << simplicial_complex.bla;
         }
 
@@ -1917,7 +1955,7 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     Tree access_tree; //access tree for 0-simplices
     Edges m_edges;
     Tets m_tets;
-    MortonSimplicialComplex< D, _M > simplicial_complex; //replace
+    MortonHalfSimplicialComplex< D, _M > simplicial_complex; //replace
     //std-containers with proper trees with metrical traits
     Vector e[D]; //basis
 

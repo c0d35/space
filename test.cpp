@@ -8,12 +8,13 @@ int main()
     
     HCTree3 tree;
     SimpleEuklidianSpaceFdouble< 6 >::Vector v;
-    EuklidianSpaceCompressedFuint16< 3 > space;
-    EuklidianSpaceCompressedFuint16< 3 >::PointT point = {1, 2, 3};
+    EuklidianSpaceCompressedFuint16< 4 > space;
+    EuklidianSpaceCompressedFuint16< 4 >::PointT point = {1, 2, 3, 4};
+    //typedef EuklidianSpaceCompressedFuint16< 4 > Space3;
     space.insert(point);
 
-	AbstractSimplex< 3, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, Set< 3 >  > atetra;
-	Simplex< 6 > simplex6;
+	AbstractHalfSimplex< 3, LinkType::Single, AccessScheme::Index, std::vector, std::allocator, Set< 3 >  > atetra;
+	HalfSimplex< 6 > simplex6;
 	std::cout << "atetra::d = " << decltype(atetra)::d << std::endl;
 	std::cout << "simplex6::d = " << decltype(simplex6)::d << std::endl;
     std::cout << " SimpleEuklidianMetricTrait< 6, float >::Vector::d  = " << decltype(v)::d << std::endl;
