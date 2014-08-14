@@ -91,7 +91,13 @@ struct simd_cp< _T, 0 >
 		return d[0] = s[0];
 	}
 };
-
+/*
+template< typename T >
+struct fifo< T >
+{
+    T
+}
+*/
 //quick hack integer chooser stuff
 //
 template< int S > struct SimpleLargerInteger{
@@ -179,6 +185,8 @@ template< int _Dim, LinkType _LType, AccessScheme _AScheme,
     template< class U , class V > class Containment , template< class U >
     class Allocator, class _Space > class AbstractHalfSimplicialComplex{};
 template< typename _ASD > struct AbstractHalfSimplicialComplexTopologyTrait{};
+template< typename _ASD > struct
+AbstractHalfSimplicialComplexTopologicalOperations{};
 template< typename _Iterator > 
 struct AbstractHalfSimplicialComplexIteratorFunctionTrait{};
 template< typename _ASD > struct AbstractHalfSimplicialComplexIterator{};
@@ -232,7 +240,6 @@ template< template< class U, class V > class _Containment,
     AbstractHalfSimplex(){};
     AbstractHalfSimplex(AbstractHalfSimplex &s){};
 };
-
 
 ///why d + 1 you may ask. 'cause \f$ {d+1 \choose d} = d+1\f$ , u kno'. thus
 //we're terminating the recursion at dimension = -1
@@ -403,6 +410,10 @@ template< int _Dim,
         void* simplex_containers[_Dim + 1];
         int bla;
 };
+
+//is an HalfSimplex< 1 > homoeomorph to a proper minimal iterator valid
+//on every simplicial complex?
+//
 template< int _Dim, LinkType _LType, AccessScheme _AScheme,
     template< class U , class V > class _Containment,
     template< class U > class _Allocator, class _Space> 
@@ -414,6 +425,8 @@ AbstractHalfSimplicialComplex< _Dim, _LType,
         typedef AbstractHalfSimplicialComplex< _Dim, _LType,
                 _AScheme, _Containment, _Allocator, _Space > ASCT;
         typedef AbstractHalfSimplicialComplexTopologyTrait< ASCT > ASCTopoT;
+        typedef AbstractHalfSimplicialComplexTopologicalOperations < ASCT >
+            ASCTopoOp;
         typedef AbstractHalfSimplicialComplexIteratorFunctionTrait<
             AbstractHalfSimplicialComplexIterator > IterFuncT;
         template< int D >
@@ -446,6 +459,13 @@ AbstractHalfSimplicialComplex< _Dim, _LType,
         {
             return IterFuncT::isvalid(*this);
         }
+        inline AbstractHalfSimplicialComplexIterator&
+            make(HalfSimplex< 0 > s[ _Dim + 1])
+            {
+                return ASCTopoOp::template makeAbstractSimplex<
+                       AbstractHalfSimplicialComplexIterator, _Dim >
+                       ::doit(*this, s);
+            }
         template < int D >
             inline AbstractHalfSimplicialComplexIterator& 
             insert(HalfSimplex< D > &s)
@@ -463,7 +483,7 @@ AbstractHalfSimplicialComplex< _Dim, _LType,
             }
         template < int D >
             inline HalfSimplex< D > &
-            get(HalfSimplex< D > s)
+            get(HalfSimplex< D > &hs)
             {
 
                 return 
@@ -478,7 +498,7 @@ AbstractHalfSimplicialComplex< _Dim, _LType,
             return simplicesindices[i];
         }
 
-        inline ptrdiff_t operator [] (ptrdiff_t i)
+        inline ptrdiff_t& operator [] (ptrdiff_t i)
         {
             return simplicesindices[i];
         }
@@ -526,6 +546,25 @@ AbstractHalfSimplicialComplex< _Dim, LinkType::Single,
               _Allocator< HalfSimplex < D > > >;
 
         //use const_expr for operations
+/*
+        template< int D, class _It >
+            struct makeSimplex
+            {
+                static inline bool doit(_It &iter)
+                {
+                    bool succ = true;
+                    return succ;
+                }
+            };
+        template< class _It >
+            struct makeSimplex< 0, _It >
+            {
+                static inline bool doit(_It &iter)
+                {
+                    return true;
+                }
+            };
+            */
         template< int _D, class _It >
             struct simplexFlip
             {
@@ -748,6 +787,133 @@ AbstractHalfSimplicialComplex< _Dim, LinkType::Single,
 
 };
 
+//generators should be independend
+//make full simplex (?)
+template< int _Dim,
+    template< class U , class V > class _Containment,
+    template< class U > class _Allocator, class _Space >
+    struct      AbstractHalfSimplicialComplexTopologicalOperations<  
+    AbstractHalfSimplicialComplex< _Dim, LinkType::Single,
+    AccessScheme::Index, _Containment, _Allocator, _Space > >
+{
+    public:
+
+        typedef AbstractHalfSimplicialComplex< _Dim,
+                LinkType::Single, AccessScheme::Index, _Containment,
+                _Allocator, _Space > ASCT;
+        typedef AbstractHalfSimplicialComplexIterator< ASCT > Iter;
+
+        template< int D >
+            using HalfSimplex = AbstractHalfSimplex< D, LinkType::Single,
+                  AccessScheme::Index, _Containment,
+                  _Allocator, _Space >;
+
+        template< int D >
+            using Container = _Containment< HalfSimplex< D >,
+                  _Allocator< HalfSimplex < D > > >;
+//assuming that the HalfSimplex<0> are already inserted and part
+//of the simplicial complex referenced by the iterator
+        template< int D, class _It >
+            struct appendAbstractSimplex
+            {
+                static inline _It& doit(_It &iter, HalfSimplex< 0 > s[_It::d])
+                {
+                    bool succ = true;
+                    return succ;
+                }
+            };
+        template< class _It >
+            struct appendAbstractSimplex< 0, _It >
+            {
+                static inline _It doit(_It &iter, HalfSimplex< 0 > s[1])
+                {
+                    return true;
+                }
+            };
+        template< class _It, int D >
+            struct setOpponent
+            {
+                static inline void doit(_It iterators[D])
+                {
+                    HalfSimplex< D - 2 > append;
+
+                    for(int i = 0; i < (D + 1); i++)
+                    {
+                        iterators[i].get(append).opponent = 
+                            iterators[(i + 1) % (D + 1)][D - 2];
+                        iterators[(i + 1) % (D + 1)].get(append). opponent =
+                            iterators[i][D - 2];
+                    }
+                }
+            };
+        template< class _It >
+            struct setOpponent< _It, 0 >
+            {
+                static inline void doit(_It* iterators)
+                {
+
+                }
+            };
+        template< class _It >
+            struct setOpponent< _It, 1 >
+            {
+                static inline void doit(_It* iterators)
+                {
+
+                }
+            };
+
+        template< class _It , int D >
+            struct makeAbstractSimplex
+            {
+                static inline Iter& doit(Iter &it, HalfSimplex< 0 > s[D + 1])
+                {
+                    //directed complete partial order
+                    bool succ = true;
+                    HalfSimplex< D > hs;
+                    Iter iterators[D + 1];
+                    HalfSimplex< 0 > sub[D];
+                    for(int i = 0; i < (D + 1); i++)
+                    {
+                        for(int j = 0; j < D; j++)
+                        {
+                            sub[j] = s[(j + i) % D];
+                        }
+                        if(i & 1)std::swap(sub[0], sub[D - 1]);//loop separation
+                        iterators[i] = makeAbstractSimplex< _It, D - 1 >
+                        ::doit(it, sub); //iterator now contains handles
+                    }
+                    setOpponent< _It, D >::doit(iterators);
+                    /*
+                    if((D - 2) > 0)
+                    {
+                        HalfSimplex< D - 2 > append;
+
+                        for(int i = 0; i < (D + 1); i++)
+                        {
+                            iterators[i].get(append).opponent = 
+                                iterators[(i + 1) % (D + 1)][D - 2];
+                            iterators[(i + 1) % (D + 1)].get(append). opponent =
+                                iterators[i][D - 2];
+                        }
+                    }
+                    */
+                    it.insert(hs);
+                    return it;
+                }
+            };
+       template< class _It >
+            struct makeAbstractSimplex< _It, 0 >
+            {
+                static inline _It doit(_It &it, HalfSimplex< 0 > s[1])
+                {
+                    HalfSimplex< 0 > hs;
+                    it.insert(hs);
+                    return it;
+                }
+            };
+
+};
 
 #include <vector>
 #include <map>
@@ -1649,6 +1815,9 @@ AbstractHalfSimplicialComplex< D, LinkType::Single, AccessScheme::Index,
 template< int D, template< int _D > class M > using
 MortonHalfSimplicialComplexTopologyTrait = AbstractHalfSimplicialComplexTopologyTrait<
 MortonHalfSimplicialComplex< D, M > >;
+template< int D, template< int _D > class M > using
+MortonHalfSimplicialComplexTopologicalOperations = AbstractHalfSimplicialComplexTopologicalOperations<
+MortonHalfSimplicialComplex< D, M > >;
 template< int D, template< int _D > class M  > using
 MortonHalfSimplicialComplexIterator = AbstractHalfSimplicialComplexIterator<
 MortonHalfSimplicialComplex< D, M > >;
@@ -1759,6 +1928,7 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         vv.v = k;
         MortonHalfSimplex< 1, _M > he0, he1;
         std::vector< MortonHalfSimplex< 1, _M > > halfedges;
+        MortonHalfSimplex< 0, _M > tetra[4];
         Iterator iter0, iter1;
         iter0 = simplicial_complex.insert(v);
         access_tree.insert(k, iter0[0]);
@@ -1869,26 +2039,45 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
             HalfSimplex< d > simp;
             typename std::multimap< int, KeyType >::iterator beg =
                 sorted_by_dist.begin();
+            tetra[0] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[beg->second].vertex_id];
             tet[0] = (*(static_cast< typename SC::template
                         Container< 0 > * >
                         (simplicial_complex[0])))
                 [access_tree[beg->second].vertex_id].v;
             beg++;
+
+            tetra[1] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[beg->second].vertex_id];
             tet[1] = (*(static_cast< typename SC::template
                         Container< 0 > * >
                         (simplicial_complex[0])))
                 [access_tree[beg->second].vertex_id].v;
             beg++;
+
+            tetra[2] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[beg->second].vertex_id];
             tet[2] = (*(static_cast< typename SC::template
                         Container< 0 > * >
                         (simplicial_complex[0])))
                 [access_tree[beg->second].vertex_id].v;
             beg++;
-            
+
+            tetra[3] = (*(static_cast< typename SC::template
+                        Container< 0 > * >
+                        (simplicial_complex[0])))
+                [access_tree[beg->second].vertex_id];
             tet[3] = (*(static_cast< typename SC::template
                         Container< 0 > * >
                         (simplicial_complex[0])))
                 [access_tree[beg->second].vertex_id].v;
+            iter0.make(tetra);
             m_tets.push_back(tet);
 
 
