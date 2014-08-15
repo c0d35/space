@@ -863,6 +863,59 @@ template< int _Dim,
                 }
             };
 
+        template< class _It, int D >
+            struct setNext
+            {
+                static inline void doit(_It iterators[D])
+                {
+                    HalfSimplex< D - 1 > append;
+
+                    for(int i = 0; i < (D + 1); i++)
+                    {
+                        iterators[i].get(append).next = 
+                            iterators[(i + 1) % (D + 1)][D - 1];
+                    }
+                }
+            };
+        template< class _It >
+            struct setNext< _It, 0 >
+            {
+                static inline void doit(_It* iterators)
+                {
+
+                }
+            };
+        template< class _It, int D >
+            struct setUpperLower
+            {
+                static inline void doit(_It iterators[D])
+                {
+                    HalfSimplex< D > upper;
+                    HalfSimplex< D - 1 > lower;
+
+                    for(int i = 0; i < (D + 1); i++)
+                    {
+                        iterators[i].get(upper).lower = 
+                            iterators[i][D - 1];
+                        iterators[i].get(lower).upper =
+                            iterators[i][D];
+
+
+                    }
+                }
+            };
+
+        template< class _It >
+            struct setUpperLower< _It, 0 >
+            {
+                static inline void doit(_It* iterators)
+                {
+                    //nothin to do, cause upper is set by 
+                    //setUpperLower<1> 
+                }
+            };
+
+
         template< class _It , int D >
             struct makeAbstractSimplex
             {
@@ -884,6 +937,8 @@ template< int _Dim,
                         ::doit(it, sub); //iterator now contains handles
                     }
                     setOpponent< _It, D >::doit(iterators);
+                    setNext< _It, D >::doit(iterators);
+                    setUpperLower< _It, D >::doit(iterators);
                     /*
                     if((D - 2) > 0)
                     {
