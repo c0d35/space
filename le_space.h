@@ -19,6 +19,7 @@
 #include <iostream>
 #include <array>
 #include <cmath>
+#include <memory>
 //some helpers, rewrite them with constexpr
 
 template< bool _cond, class _then, class _else >
@@ -235,7 +236,6 @@ template< template< class U, class V > class _Containment,
     AccessScheme::Index, _Containment,
     _Allocator, _Space >: _Space
 {
-
     enum { d = -1, };
     AbstractHalfSimplex(){};
     AbstractHalfSimplex(AbstractHalfSimplex &s){};
@@ -866,7 +866,7 @@ template< int _Dim,
         template< class _It, int D >
             struct setNext
             {
-                static inline void doit(_It iterators[D])
+                static inline void doit(_It iterators[D + 1])
                 {
                     HalfSimplex< D - 1 > append;
 
@@ -899,7 +899,6 @@ template< int _Dim,
                             iterators[i][D - 1];
                         iterators[i].get(lower).upper =
                             iterators[i][D];
-
 
                     }
                 }
@@ -967,6 +966,24 @@ template< int _Dim,
                     return it;
                 }
             };
+       template< class It, int D >
+           struct getHamiltonianPath
+           {
+               static inline Iter& doit(It &it, std::unique_ptr< HalfSimplex< D > > circle)
+               { 
+                   return it;
+
+               }
+
+           };
+       template< class It >
+           struct getHamiltonPathVertices
+           {
+               static inline Iter& doit(It &it, std::unique_ptr< HalfSimplex< 0 > > circle)
+               {
+                   return it;
+               }
+           };
 
 };
 
