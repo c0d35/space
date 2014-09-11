@@ -449,6 +449,17 @@ AbstractHalfSimplicialComplex< _Dim, _LType,
             IterFiller< _Dim, AbstractHalfSimplicialComplexIterator,
                 ASCT >::fill(this);
         }
+        AbstractHalfSimplicialComplexIterator(const 
+                AbstractHalfSimplicialComplexIterator &iter)
+        {
+            for(int i = 0; i < _Dim + 1; i++)
+            {
+                iterdata[i] = iter.iterdata[i];
+                simplicesindices[i] = iter.simplicesindices[i];
+                m_sd = iter.m_sd;
+            }
+
+        }
    
         ~AbstractHalfSimplicialComplexIterator()
         {
@@ -888,27 +899,49 @@ template< int _Dim,
         template< class _It, int D >
             struct setUpperLower
             {
-                static inline void doit(_It iterators[D])
+                static inline void doit(_It iterators[D + 1])
                 {
                     HalfSimplex< D > upper;
                     HalfSimplex< D - 1 > lower;
+                    /*
+                                 (*(static_cast< Container< D > * >
+                        (m_sd->simplex_containers[D])))
+                    [simplicesindices[ D ]];*/
 
-                    for(int i = 0; i < (D + 1); i++)
+
+
+                    for(int i = 0; i < (D); i++)
                     {
+                        Container< D > *cp = static_cast< Container< D > *>(
+                                iterators[i].m_sd->simplex_containers[D]);
                         iterators[i].get(upper).lower = 
                             iterators[i][D - 1];
-                        iterators[i].get(lower).upper =
-                            iterators[i][D];
 
+                        iterators[i].get(lower).upper =
+                            iterators[i][D]; 
+ 
                     }
                 }
             };
 
         template< class _It >
-            struct setUpperLower< _It, 0 >
+            struct setUpperLower< _It, -1 >
             {
-                static inline void doit(_It* iterators)
+                static inline void doit(_It iterators[0])
                 {
+                    /*
+                    HalfSimplex< D > upper;
+              //      HalfSimplex< D - 1 > lower;
+
+                    for(int i = 0; i < (1 + 1); i++)
+                    {
+                        iterators[i].get(upper).lower = 
+                            iterators[i][1 - 1];
+                        iterators[i].get(lower).upper =
+                            iterators[i][1];
+
+                    }
+                    */
                     //nothin to do, cause upper is set by 
                     //setUpperLower<1> 
                 }
@@ -923,7 +956,10 @@ template< int _Dim,
                     //directed complete partial order
                     bool succ = true;
                     HalfSimplex< D > hs;
+                    it.insert(hs);
+                    //it.make(s);
                     Iter iterators[D + 1];
+                    for(int i = 0; i < (D + 1); i++) iterators[i] = it;
                     HalfSimplex< 0 > sub[D];
                     for(int i = 0; i < (D + 1); i++)
                     {
@@ -932,10 +968,11 @@ template< int _Dim,
                             sub[j] = s[(j + i) % D];
                         }
                         if(i & 1)std::swap(sub[0], sub[D - 1]);//loop separation
+                        //it.make(
                         iterators[i] = makeAbstractSimplex< _It, D - 1 >
                         ::doit(it, sub); //iterator now contains handles
                     }
-                    setOpponent< _It, D >::doit(iterators);
+                      setOpponent< _It, D >::doit(iterators);
                     setNext< _It, D >::doit(iterators);
                     setUpperLower< _It, D >::doit(iterators);
                     /*
@@ -952,7 +989,6 @@ template< int _Dim,
                         }
                     }
                     */
-                    it.insert(hs);
                     return it;
                 }
             };
