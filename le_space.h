@@ -493,6 +493,14 @@ AbstractHalfSimplicialComplex< _Dim, _LType,
                 return *this;
             }
         template < int D >
+            inline Container< D > &
+            getSimplices(HalfSimplex< D > &hs)
+            {
+                return *(static_cast< Container< D > * >
+                        (m_sd->simplex_containers[D]));
+
+            }
+        template < int D >
             inline HalfSimplex< D > &
             get(HalfSimplex< D > &hs)
             {
@@ -1563,6 +1571,96 @@ template< int D, int M,
                 return true;
         }
 
+        inline Keys getSamplers(const KeyType key, int level)
+        {
+
+            //generate vectors to add
+            PointT l_adjvec[ ipow< 3, D >::eval];
+            PointT l_basevec[ D ];
+            for(int i = 0; i < D; i++)
+            {
+                l_basevec[i][i] = 0x1;
+                l_basevec[i][i] <<= ( sizeof(l_basevec[i]) * 8 - level - 1);
+            }
+            for(int i = 0; i < ipow< 3, D >::eval; i++)
+            {
+
+            }
+            Keys l_surrounding;
+            //std::stack< int > down;
+            //KeyType key;
+            KeyType b[D]; //base
+            //KeyType zero =  key & (~(ipow<2,
+            //            (sizeof(KeyType) * 8 / D) - level>::eval - 1));
+            for(int i = 0; i < D; i++) b[i] = 0b1 << 
+                ((((sizeof(KeyType) * 8 / D) - level) * D)  - i);
+            //to do: snaking
+            //using point symmetry to mask out distance 2
+            KeyType key_back;
+            //key = MetricTraitT::morton_encode(p);
+           // for(int i = 0; i < D; i++) l_mortonbase[i] = 
+           // MetricTraitT::morton_encode(l_basevec[i]); 
+            key_back = key;
+            int i;
+
+            HyperCube *hypercuberef = &hypercubes[0][0];
+            HyperCube l_c;
+            int pos, next, prev;
+            unsigned int subkey;
+
+            
+            //for(int i = 0; i < ipow< 3, D >::eval; i++)
+            //O'Rourke, "Computing Relative Neighborhood graph in the L_1
+            //and L_\infty metrics," Pattern Recognition, 1982. 
+            //
+            KeyType neighbourhood[ipow< ipow< 2, 2 >::eval, D >::eval];
+            //KeyType sampler[ipow< 3, D >::eval - 1];
+            int po[D][2];
+            PointT p = MetricTraitT::morton_decode(key);
+            PointT n;
+            Keys samplers;
+            //samplers.push_back(key);
+            //L_1
+            for(int i = 0; i < (D); i++)
+            {
+
+                ValueType o = 0x1 << (((sizeof(KeyType) * 8 ) / D) 
+                        - (level - 1) );
+                //ValueType o = 0x1 << ( sizeof(l_basevec[i]) * 8 - level - 1);
+                n = p;
+                n[i] += o;
+                samplers.push_back(MetricTraitT::morton_encode(n));
+                n = p;
+                n[i] -= o;
+                samplers.push_back(MetricTraitT::morton_encode(n));
+                po[i][0] = -o;
+                po[i][1] = o;
+            }
+            
+            
+            for(int i = 0; i < ipow< 2, D >::eval; i++)
+            {
+                n = p;
+                for(int j = 0; j < D; j++)
+                    n[j] += po[j][i & (0x1 << j) ? 1 : 0];
+                samplers.push_back(MetricTraitT::morton_encode(n));
+            }
+
+            for(int k = 0; k < D; k++)
+            {
+                for(int i = 0; i < ipow< 2, D >::eval; i++)
+                {
+                    n = p;
+                    for(int j = 0; j < D; j++)
+                        n[(j + 1) % D] += po[(j + 1) % D][i & (0x1 << j)
+                            ? 1 : 0];
+                    n[k] = p[k];
+                    samplers.push_back(MetricTraitT::morton_encode(n));
+                }
+            }
+           
+            return samplers;
+        }
         inline Keys getAdjacencies(const KeyType key, int level)
         {
 
@@ -1960,15 +2058,25 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     typedef std::vector< std::array< KeyType, 5 > > Tets;
 
     typedef MortonHalfSimplicialComplex< D, _M > SC;
+    template < int _D >
+        using HalfSimplex = MortonHalfSimplex< _D, _M >;
   //  typedef MortonHalfSimplex< D, _M > S;
     typedef MortonHalfSimplicialComplexIterator< d, _M > Iterator;
+    template < int _D >
+        using Container = typename SC::template 
+        Container< _D >;
+    //using Vertices = MortonHalfSimplicialComplexIterator< 0, _M >::typename Container;
+
+
+
     /*
     struct Iterator: MortonHalfSimplicialComplexIterator < d, _M>
     {
     };
     */
-    struct Vertex: MortonHalfSimplex< 0, _M >
+    class Vertex: public MortonHalfSimplex< 0, _M >
     {
+        public:
         enum { k = 1, d = D};
         //KeyType v;
         /*
@@ -2015,6 +2123,28 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
     */
     //inline Iterator insert(PointT &p)
     //
+    
+     template < int __D > inline Container< __D >&
+        getSimplices(MortonHalfSimplex< __D, _M > &mhs)
+        {
+            Iterator iter(&simplicial_complex);
+            return iter.getSimplices(mhs);
+        }
+    
+    inline Iterator getIterator()
+    {
+        Iterator iter(&simplicial_complex);
+        return iter;
+    }
+    
+    inline Container< 0 >& getVertices()
+    {
+        MortonHalfSimplex< 0, _M > v;
+        Iterator iter(&simplicial_complex);
+        return iter.getSimplices(v);
+    }
+    
+
     inline Tets & getTets()
     {
         return m_tets;
@@ -2038,7 +2168,8 @@ struct LinearSpaceCompressed: public MetricSpace< D, _M >
         std::vector< MortonHalfSimplex< 1, _M > > halfedges;
         MortonHalfSimplex< 0, _M > tetra[4];
         Iterator iter0, iter1;
-        iter0 = simplicial_complex.insert(v);
+        iter0 = simplicial_complex.insert(vv);
+       // iter0 = simplicial_complex.insert(v); //which vertex to use?
         access_tree.insert(k, iter0[0]);
         //if(neighbours.size() < 3) return k;
         //
@@ -2276,7 +2407,7 @@ using EuklidianSpaceCompressedFuint64 = LinearSpaceCompressed< D,
 //projective spaces -> quotient spaces of topological spaces(?)
 //-> finite fields -> elliptic curves
 //Grassmannian(k, V) is a algebraic subvariety of projective space P(Λ^kV) ->
-//Pluecker embedding
+//Pluecker embeddingalComplexIterator >::doit(*this);	
 //exterior algebra -> simplicial complex
 //derived from power set(?) correspondency \f$P(X) \cong \{0, 1\}^X\f$
 //from char. function to isomorphism.
