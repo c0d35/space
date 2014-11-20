@@ -1084,6 +1084,30 @@ struct SimplePoint
 			}
 			return *this;
 		}
+        inline SimplePoint& operator += (const SimplePoint& p)
+        {
+            for(ptrdiff_t i = 0; i < D; i++)
+            {
+                values[i] += p.values[i];
+            }
+            return *this;
+        }
+        inline SimplePoint& operator -= (const SimplePoint& p)
+        {
+            for(ptrdiff_t i = 0; i < D; i++)
+            {
+                values[i] -= p.values[i];
+            }
+            return *this;
+        }
+        inline const SimplePoint operator + (const SimplePoint& p) const
+        {
+            return SimplePoint(*this) += p;
+        }
+        inline const SimplePoint operator - (const SimplePoint& p) const
+        {
+            return SimplePoint(*this) -= p;
+        }
 };
 
 template< int D, typename CompType, typename MachineType >
