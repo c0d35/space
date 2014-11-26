@@ -20,6 +20,8 @@
 #include <array>
 #include <cmath>
 #include <memory>
+#include <boost/multiprecision/integer.hpp>
+
 //some helpers, rewrite them with constexpr
 
 template< bool _cond, class _then, class _else >
@@ -1108,6 +1110,15 @@ struct SimplePoint
         {
             return SimplePoint(*this) -= p;
         }
+
+        inline Type length()
+        {
+            SimplePoint p = *this;
+            Type s = 0; Type r;
+            for(int i = 0; i < D; i++) s += p[i] * p[i];
+            s = std::sqrt(s);
+            return s;
+        }
 };
 
 template< int D, typename CompType, typename MachineType >
@@ -1684,6 +1695,50 @@ template< int D, int M,
             }
            
             return samplers;
+        }
+        inline Keys getChilds(){}
+        inline Keys getSub(const KeyType key, unsigned int level)
+        {
+
+            HyperCube *hypercuberef = &hypercubes[0][0];
+            int next;
+            unsigned int subkey;
+
+            Keys l_subs;
+            Keys l_next;
+            KeyType l_key = key;
+            if(level == 0)
+            {
+                l_subs.push_back(0);
+                return l_subs;
+            }
+
+            for(int i = 1;i < level; i++)
+            {
+                subkey = (numofchilds - 1) &
+                    (key >> ((numoflevels - i) * D));
+                next = hypercuberef->childs[subkey];
+                if(next == -1)
+                {
+                    return l_subs;
+                }
+                hypercuberef = &(hypercubes[i][next]);
+            }
+
+            for(int i = 0; i < ipow< 2, D >::eval; i++)
+            {
+                if(hypercuberef->childs[i] != -1)
+                {
+
+                    l_key &= ~(static_cast<KeyType>
+                            (((0b1 << ((numoflevels - level) * D)) - 1)));
+                    l_key |= static_cast<KeyType>
+                            (i << ((numoflevels - level) * D));
+                    l_subs.push_back(l_key);
+                }
+            }
+            return l_subs;
+            return true;
         }
         inline Keys getAdjacencies(const KeyType key, int level)
         {
